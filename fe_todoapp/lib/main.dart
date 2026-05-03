@@ -8,7 +8,6 @@ import 'features/ai/ai_page.dart';
 import 'features/auth/login/login_page.dart';
 import 'features/auth/register/register_page.dart';
 import 'features/habit/habit_page.dart';
-import 'features/profile/profile_page.dart';
 import 'features/profile/productivity_report_page.dart';
 import 'features/task/task_detail_page.dart';
 import 'features/profile/notification_settings_page.dart';
@@ -43,7 +42,7 @@ class PersonalAiManagerApp extends StatelessWidget {
       ),
       // Route đầu tiên khi mở app
       // App sẽ hiển thị màn hình login trước
-      initialRoute: '/dashboard',
+      initialRoute: '/login',
       // Danh sách các route của ứng dụng
       routes: {
         '/login': (context) => const LoginPage(),
