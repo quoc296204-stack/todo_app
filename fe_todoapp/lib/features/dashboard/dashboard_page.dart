@@ -1,284 +1,245 @@
 import 'package:flutter/material.dart';
-import 'quick_create_sheet.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import '../../../core/constants.dart'; // Đường dẫn đến file constants.dart của bạn
 
-class DashboardPage extends StatelessWidget {
+// --- MODEL TASK ---
+class Task {
+  final String title;
+  final String time;
+  final String priority;
+
+  Task({required this.title, required this.time, required this.priority});
+
+  factory Task.fromJson(Map<String, dynamic> json) {
+    return Task(
+      title: json['title'] ?? '',
+      time: json['time'] ?? '',
+      priority: json['priority'] ?? '',
+    );
+  }
+}
+
+class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
 
-  // --- PALETTE MÀU ---
+  @override
+  State<DashboardPage> createState() => _DashboardPageState();
+}
+
+class _DashboardPageState extends State<DashboardPage> {
+  // --- HỆ MÀU ---
   final Color primaryColor = const Color(0xFF4647D3);
   final Color bgColor = const Color(0xFFF5F7F9);
   final Color surfaceColor = Colors.white;
-  final Color errorColor = const Color(0xFFB41340);
+  final Color textMain = const Color(0xFF2C2F31);
+  final Color textSub = const Color(0xFF595C5E);
+  final Color tertiaryColor = const Color(0xFF815100);
+
+  int _selectedIndex = 0;
+
+  // --- BIẾN DỮ LIỆU ĐỘNG ---
+  String userName = "..."; // Lấy từ DB
+  String avatarUrl = "";           // Lấy từ DB[cite: 3]
+  List<Task> todayTasks = [];
+  bool isLoadingTasks = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserData(); // Gọi hàm lấy thông tin user[cite: 3]
+    _fetchTasksFromBackend();
+  }
+
+  // --- HÀM LẤY THÔNG TIN USER TỪ DATABASE ---
+  Future<void> _loadUserData() async {
+    try {
+      // Thay đổi URL thành endpoint profile của bạn
+      final response = await http.get(Uri.parse('${AppConfig.baseUrl}/auth/profile/1'));
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        setState(() {
+          userName = data['full_name'] ?? "Người dùng"; // Gán tên từ DB[cite: 3]
+          avatarUrl = data['avatar_url'] ?? "";        // Gán ảnh từ DB[cite: 3]
+        });
+      }
+    } catch (e) {
+      debugPrint("Lỗi lấy thông tin user: $e");
+      setState(() => userName = "Hiếu"); // Giá trị dự phòng
+    }
+  }
+
+  // --- HÀM LẤY TASK ---
+  Future<void> _fetchTasksFromBackend() async {
+    try {
+      final response = await http.get(Uri.parse('${AppConfig.baseUrl}/auth/profile/1'));
+
+      if (response.statusCode == 200) {
+        List<dynamic> data = json.decode(response.body);
+        setState(() {
+          todayTasks = data.map((item) => Task.fromJson(item)).toList();
+          isLoadingTasks = false;
+        });
+      }
+    } catch (e) {
+      setState(() => isLoadingTasks = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: bgColor,
-      // 1. TOP APP BAR
-      appBar: AppBar(
-        backgroundColor: bgColor.withOpacity(0.8),
-        elevation: 0,
-        centerTitle: false,
-        title: Row(
-          children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: const BoxDecoration(
-                shape: BoxShape.circle,
-                image: DecorationImage(
-                  image: NetworkImage('https://via.placeholder.com/150'),
-                  fit: BoxFit.cover,
-                ),
-              ),
-            ),
-            const SizedBox(width: 12),
-            const Text(
-              'Digital Curator',
-              style: TextStyle(
-                color: Color(0xFF0F172A),
-                fontWeight: FontWeight.bold,
-                fontSize: 20,
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.auto_awesome, color: Color(0xFF6366F1)), // Đổi icon sang AI cho đúng bản HTML mới
-            onPressed: () {
-              _showQuickCreate(context); // Gọi hàm hiện bảng
-            },
-          )
-        ],
-      ),
-
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 16),
-            Text(
-              "THỨ HAI, 24 THÁNG 5",
-              style: TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 1.5,
-                color: primaryColor,
-              ),
-            ),
-            const Text(
-              "Xin chào, Tuấn!",
-              style: TextStyle(
-                fontSize: 34,
-                fontWeight: FontWeight.w800,
-                letterSpacing: -1,
-              ),
-            ),
-            const SizedBox(height: 24),
-
-            // 2. BENTO GRID
-            Row(
-              children: [
-                Expanded(
-                  child: Container(
-                    height: 180,
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: surfaceColor,
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.03),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
-                        )
-                      ],
-                    ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Stack(
-                          alignment: Alignment.center,
-                          children: [
-                            SizedBox(
-                              width: 85,
-                              height: 85,
-                              child: CircularProgressIndicator(
-                                value: 0.65,
-                                strokeWidth: 8,
-                                backgroundColor: const Color(0xFFEEF1F3),
-                                valueColor: AlwaysStoppedAnimation(primaryColor),
-                              ),
-                            ),
-                            const Text(
-                              "65%",
-                              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 10),
-                        const Text("Hoàn thành", style: TextStyle(fontSize: 12, color: Colors.grey)),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    children: [
-                      _buildStatBox("Tổng công việc", "8 Tasks", Icons.assignment, primaryColor),
-                      const SizedBox(height: 12),
-                      _buildStatBox("Quá hạn", "2 Tasks", Icons.warning, errorColor),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 24),
-
-            // 3. AI INSIGHT
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: surfaceColor.withOpacity(0.6),
-                borderRadius: BorderRadius.circular(16),
-                border: Border(left: BorderSide(color: primaryColor, width: 4)),
-              ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(Icons.auto_awesome, color: primaryColor, size: 22),
-                  const SizedBox(width: 12),
-                  const Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text("GỢI Ý AI", style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF4647D3))),
-                        SizedBox(height: 4),
-                        Text(
-                          "Bạn nên giải quyết Task 'Đồ án TN' ngay vì sắp đến deadline.",
-                          style: TextStyle(fontSize: 14, height: 1.4),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 24),
-
-            // 4. PRIORITY TASKS
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text("Công việc ưu tiên", style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800)),
-                GestureDetector(
-                  onTap: () => Navigator.pushNamed(context, '/tasks'),
-                  child: Text(
-                    "Xem tất cả",
-                    style: TextStyle(color: primaryColor, fontWeight: FontWeight.bold, fontSize: 12),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            _buildTaskRow("Đồ án TN - Hoàn thiện UI", "Hạn: 14:00 • Cao"),
-            _buildTaskRow("Họp nhóm Sprint Review", "Hạn: 16:30 • Trung bình"),
-
-            const SizedBox(height: 100),
-          ],
-        ),
-      ),
-
-      // 5. FAB
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          _showQuickCreate(context); // Gọi hàm hiện bảng trượt từ dưới lên
+      appBar: _buildAppBar(),
+      body: RefreshIndicator(
+        onRefresh: () async {
+          await _loadUserData();
+          await _fetchTasksFromBackend();
         },
-        backgroundColor: primaryColor,
-        elevation: 4,
-        shape: const CircleBorder(),
-        child: const Icon(Icons.add, color: Colors.white, size: 30),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-
-      // 6. BOTTOM NAV
-      bottomNavigationBar: Container(
-        padding: const EdgeInsets.only(top: 12, bottom: 32, left: 8, right: 8),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 20,
-              offset: const Offset(0, -5),
-            )
-          ],
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            _buildNavItem(context, Icons.home, "Home", true, route: '/dashboard'),
-            _buildNavItem(context, Icons.check_circle, "Tasks", false, route: '/tasks'),
-            _buildNavItem(context, Icons.repeat, "Habits", false , route: '/habits'),
-            _buildNavItem(context, Icons.auto_awesome, "AI", false, route: '/ai'),
-            _buildNavItem(context, Icons.person, "Profile", false,route: '/profile'),
-          ],
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 24),
+              _buildHeader(),
+              const SizedBox(height: 32),
+              _buildAIInsightCard(),
+              const SizedBox(height: 32),
+              _buildPriorityTasksSection(context),
+              const SizedBox(height: 32),
+              _buildHabitsSection(),
+              const SizedBox(height: 120),
+            ],
+          ),
         ),
       ),
+      bottomNavigationBar: _buildBottomNav(context),
+      extendBody: true,
     );
   }
 
-  Widget _buildStatBox(String label, String value, IconData icon, Color color) {
+  PreferredSizeWidget _buildAppBar() {
+    return AppBar(
+      backgroundColor: bgColor.withOpacity(0.8),
+      elevation: 0,
+      centerTitle: false,
+      automaticallyImplyLeading: false,
+      title: Row(
+        children: [
+          CircleAvatar(
+            radius: 20,
+            // Hiển thị ảnh từ database, nếu trống thì dùng ảnh mặc định
+            backgroundImage: avatarUrl.isNotEmpty
+                ? NetworkImage(avatarUrl)
+                : const NetworkImage('https://www.w3schools.com/howto/img_avatar.png'),
+          ),
+          const SizedBox(width: 12),
+          // Hiển thị Tên User động trên AppBar[cite: 3]
+          Text(userName, style: TextStyle(color: textMain, fontWeight: FontWeight.bold, fontSize: 18)),
+        ],
+      ),
+      actions: [
+        IconButton(
+          icon: Icon(Icons.notifications_none_outlined, color: textSub),
+          onPressed: () {},
+        ),
+        const SizedBox(width: 8),
+      ],
+    );
+  }
+
+  Widget _buildHeader() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 4),
+        // Hiển thị lời chào với tên lấy từ Database[cite: 3]
+        Text('Xin chào, $userName!', style: TextStyle(color: textMain, fontSize: 32, fontWeight: FontWeight.w800, letterSpacing: -1)),
+      ],
+    );
+  }
+
+  // ... Các Widget khác (AI Insight, Task Section, Habits) giữ nguyên như cũ ...
+  Widget _buildAIInsightCard() {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(16),
+        color: surfaceColor,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 20, offset: const Offset(0, 10)),
+        ],
+        border: Border(left: BorderSide(color: primaryColor, width: 6)),
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Flexible(
+          Icon(Icons.auto_awesome, color: primaryColor, size: 24),
+          const SizedBox(width: 16),
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(label.toUpperCase(),
-                  style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: color),
-                  overflow: TextOverflow.ellipsis,
+                Text('GỢI Ý TỪ AI', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: primaryColor, letterSpacing: 1)),
+                const SizedBox(height: 6),
+                Text(
+                  "Dựa trên lịch trình, bạn nên hoàn thành 'Đồ án TN' trước 14:00 hôm nay.",
+                  style: TextStyle(fontSize: 15, color: textMain, height: 1.5, fontWeight: FontWeight.w500),
                 ),
-                Text(value, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
               ],
             ),
           ),
-          Icon(icon, color: color, size: 22),
         ],
       ),
     );
   }
 
-  Widget _buildTaskRow(String title, String info) {
+  Widget _buildPriorityTasksSection(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text('Công việc hôm nay', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: textMain)),
+            TextButton(
+              onPressed: () => Navigator.pushNamed(context, '/tasks'),
+              child: Text('TẤT CẢ', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: primaryColor)),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        if (isLoadingTasks)
+          const Center(child: CircularProgressIndicator())
+        else if (todayTasks.isEmpty)
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 20),
+            child: Text("Hôm nay bạn không có công việc nào."),
+          )
+        else
+          ...todayTasks.map((task) => _buildTaskTile(task.title, '${task.time} • ${task.priority}')),
+      ],
+    );
+  }
+
+  Widget _buildTaskTile(String title, String subtitle) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 5, offset: const Offset(0, 2))
-        ],
+        color: surfaceColor,
+        borderRadius: BorderRadius.circular(20),
       ),
       child: Row(
         children: [
           Container(
-            width: 22,
-            height: 22,
+            width: 24,
+            height: 24,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              border: Border.all(color: const Color(0xFF9396FF), width: 2),
+              border: Border.all(color: primaryColor.withOpacity(0.2), width: 2),
             ),
           ),
           const SizedBox(width: 16),
@@ -286,48 +247,102 @@ class DashboardPage extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                Text(info, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                Text(title, style: TextStyle(fontWeight: FontWeight.bold, color: textMain, fontSize: 15)),
+                Text(subtitle, style: TextStyle(fontSize: 12, color: textSub)),
               ],
             ),
           ),
-          const Icon(Icons.more_vert, color: Colors.grey, size: 20),
+          Icon(Icons.chevron_right, color: textSub.withOpacity(0.5), size: 20),
         ],
       ),
     );
   }
 
-  Widget _buildNavItem(BuildContext context, IconData icon, String label, bool isActive, {String? route}) {
-    return InkWell(
-      onTap: () {
-        if (route != null) {
-          Navigator.pushNamed(context, route);
-        }
-      },
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, color: isActive ? primaryColor : Colors.grey[400], size: 26),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.bold,
-              color: isActive ? primaryColor : Colors.grey[400],
-            ),
+  Widget _buildHabitsSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Thói quen', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: textMain)),
+        const SizedBox(height: 16),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: [
+              _buildHabitCard('Uống nước', Icons.water_drop, Colors.blue),
+              _buildHabitCard('Đọc sách', Icons.menu_book, tertiaryColor),
+              _buildHabitCard('Tập gym', Icons.fitness_center, Colors.green),
+            ],
           ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildHabitCard(String title, IconData icon, Color color) {
+    return Container(
+      width: 140,
+      margin: const EdgeInsets.only(right: 12),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(color: surfaceColor, borderRadius: BorderRadius.circular(24)),
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(color: color.withOpacity(0.1), shape: BoxShape.circle),
+            child: Icon(icon, color: color, size: 24),
+          ),
+          const SizedBox(height: 12),
+          Text(title, style: TextStyle(fontWeight: FontWeight.bold, color: textMain, fontSize: 14)),
         ],
       ),
     );
-  }// Hàm này giúp hiển thị bảng tạo nhanh trượt từ dưới lên
-  void _showQuickCreate(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true, // Để sheet cao theo nội dung
-      backgroundColor: Colors.transparent, // Để lộ bo góc của Container bên trong
-      barrierColor: Colors.black54, // Làm mờ nền Dashboard
-      builder: (context) => const QuickCreateSheet(),
+  }
+
+  Widget _buildBottomNav(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.only(top: 12, bottom: 32),
+      decoration: BoxDecoration(
+        color: surfaceColor.withOpacity(0.95),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 20, offset: const Offset(0, -5)),
+        ],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          _buildNavItem(0, Icons.home_max_outlined, 'Home', '/dashboard'),
+          _buildNavItem(1, Icons.check_circle, 'Tasks', '/tasks'),
+          _buildNavItem(2, Icons.repeat, 'Habits', '/habits'),
+          _buildNavItem(3, Icons.auto_awesome_outlined, 'AI', '/ai'),
+          _buildNavItem(4, Icons.person_outline, 'Profile', '/profile'),
+        ],
+      ),
     );
   }
-} // Dấu đóng ngoặc cuối cùng của Class DashboardPage
+
+  Widget _buildNavItem(int index, IconData icon, String label, String route) {
+    bool isSelected = _selectedIndex == index;
+    return GestureDetector(
+      onTap: () {
+        setState(() => _selectedIndex = index);
+        if (route != '/dashboard') Navigator.pushNamed(context, route);
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? primaryColor.withOpacity(0.1) : Colors.transparent,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, color: isSelected ? primaryColor : textSub, size: 24),
+            const SizedBox(height: 4),
+            Text(label, style: TextStyle(color: isSelected ? primaryColor : textSub, fontSize: 10, fontWeight: FontWeight.bold)),
+          ],
+        ),
+      ),
+    );
+  }
+}

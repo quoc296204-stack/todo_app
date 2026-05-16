@@ -1,277 +1,371 @@
 import 'package:flutter/material.dart';
+import '../../../data/services/habit_service.dart';
+import 'package:intl/intl.dart';
 
-class HabitPage extends StatelessWidget {
-  const HabitPage({super.key});
+class HabitPage extends StatefulWidget {
+  const HabitPage({super.key}); // Giữ nguyên định danh cấu trúc của bạn
 
+  @override
+  State<HabitPage> createState() => _HabitPageState();
+}
+
+class _HabitPageState extends State<HabitPage> {
   final Color primaryColor = const Color(0xFF4647D3);
   final Color bgColor = const Color(0xFFF5F7F9);
   final Color surfaceLow = const Color(0xFFEEF1F3);
 
+  final HabitService _habitService = HabitService();
+
+  List<dynamic> habits = [];
+  bool isLoading = true;
+  int progressPercentage = 0;
+
+  DateTime _selectedDate = DateTime.now();
+  List<DateTime> _weekDays = [];
+
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: bgColor,
-      appBar: AppBar(
-        backgroundColor: Colors.white.withOpacity(0.8),
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        title: Row(
+  void initState() {
+    super.initState();
+    _generateHorizontalCalendar();
+    _loadHabitData();
+  }
+
+  void _generateHorizontalCalendar() {
+    final today = DateTime.now();
+    _weekDays = List.generate(5, (index) => today.add(Duration(days: index - 2)));
+  }
+
+  // 🌟 NÂNG CẤP BỌC TRY-CATCH: Chống tuyệt đối việc treo Loading hoặc trắng màn hình
+  Future<void> _loadHabitData() async {
+    if (!mounted) return;
+    setState(() => isLoading = true);
+
+    try {
+      final dateStr = DateFormat('yyyy-MM-dd').format(_selectedDate);
+      final res = await _habitService.getHabitsByDate(1, dateStr); // Gọi dữ liệu User ID = 1
+
+      if (res['status'] == 200 && mounted) {
+        final List<dynamic> fetchedHabits = res['data'] ?? [];
+
+        int total = fetchedHabits.length;
+        int completed = fetchedHabits.where((h) => h['is_completed'] == true).length;
+
+        setState(() {
+          habits = fetchedHabits;
+          progressPercentage = total > 0 ? ((completed / total) * 100).toInt() : 0;
+          isLoading = false;
+        });
+      } else {
+        if (mounted) setState(() => isLoading = false);
+      }
+    } catch (e) {
+      // Nếu có lỗi ép kiểu, in ngay ra màn hình debug để xử lý và tắt trạng thái xoay tải
+      debugPrint("❌ LỖI PHẦN CỨNG FRONTEND: $e");
+      if (mounted) setState(() => isLoading = false);
+    }
+  }
+
+  // Future<void> _toggleHabit(int habitId) async {
+  //   final dateStr = DateFormat('yyyy-MM-dd').format(_selectedDate);
+  //   final res = await _habitService.toggleHabit(habitId, dateStr);
+  //   if (res['status'] == 200) {
+  //     _loadHabitData();
+  //   }
+  // }
+  // 🌟 NÂNG CẤP UX: Đảo trạng thái lập tức trên giao diện, chạy API ngầm dưới nền
+  Future<void> _toggleHabit(int habitId) async {
+    // Bước 1: Cập nhật local state ngay lập tức để giao diện phản hồi không độ trễ
+    setState(() {
+      // Duyệt mảng tìm thói quen vừa bấm và đảo trạng thái is_completed
+      for (var habit in habits) {
+        if (habit['id'] == habitId) {
+          habit['is_completed'] = !(habit['is_completed'] == true);
+          break;
+        }
+      }
+
+      // Tính toán lại luôn phần trăm mục tiêu ngày để vòng tròn tiến độ nhảy số lập tức
+      int total = habits.length;
+      int completed = habits.where((h) => h['is_completed'] == true).length;
+      progressPercentage = total > 0 ? ((completed / total) * 100).toInt() : 0;
+    });
+
+    // Bước 2: Gọi API cập nhật xuống MySQL ở dưới Background (Không gọi lại _loadHabitData() để tránh bị bật Spinner loading)
+    final dateStr = DateFormat('yyyy-MM-dd').format(_selectedDate);
+    final res = await _habitService.toggleHabit(habitId, dateStr);
+
+    // Bước 3: Phòng hờ trường hợp hy hữu (lỗi mạng, server sập), nếu API thất bại thì rollback lại dữ liệu chuẩn
+    if (res['status'] != 200) {
+      _loadHabitData(); // Tải lại dữ liệu gốc từ DB để đồng bộ lại giao diện cho chính xác
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('❌ Lỗi kết nối mạng, không thể cập nhật trạng thái!'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
+  }
+
+  // 🌟 VIẾT THÊM: Hàm hiển thị Dialog tạo thói quen trực tiếp từ điện thoại
+  void _showAddHabitDialog() {
+    final titleController = TextEditingController();
+    final descController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Thói quen mới", style: TextStyle(fontWeight: FontWeight.bold)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              width: 38,
-              height: 38,
-              decoration: const BoxDecoration(
-                shape: BoxShape.circle,
-                image: DecorationImage(
-                  image: NetworkImage('https://via.placeholder.com/150'),
-                  fit: BoxFit.cover,
-                ),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Text('Digital Curator',
-                style: TextStyle(color: primaryColor, fontWeight: FontWeight.w900, fontSize: 18, letterSpacing: -1)),
+            TextField(controller: titleController, decoration: const InputDecoration(hintText: "Tên thói quen (ví dụ: Chạy bộ)...")),
+            const SizedBox(height: 8),
+            TextField(controller: descController, decoration: const InputDecoration(hintText: "Mô tả ngắn...")),
           ],
         ),
         actions: [
-          IconButton(icon: const Icon(Icons.settings_outlined, color: Color(0xFF64748B)), onPressed: () {}),
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text("Hủy")),
+          ElevatedButton(
+            onPressed: () async {
+              final title = titleController.text.trim();
+              if (title.isNotEmpty) {
+                final success = await _habitService.createHabit(1, title, descController.text.trim());
+                if (success && mounted) {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('🎉 Thêm thói quen thành công!'), behavior: SnackBarBehavior.floating),
+                  );
+                  _loadHabitData(); // Tải lại danh sách thói quen mới lập tức
+                }
+              }
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: primaryColor, foregroundColor: Colors.white),
+            child: const Text("Lưu"),
+          ),
         ],
       ),
-      body: SingleChildScrollView(
-        physics: const BouncingScrollPhysics(),
-        padding: const EdgeInsets.symmetric(horizontal: 24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 20),
-            _buildEditorialHeader(),
-            const SizedBox(height: 32),
-            _buildCalendarHeader(),
-            const SizedBox(height: 16),
-            _buildCalendarStrip(),
-            const SizedBox(height: 32),
-            _buildAIInsight(),
-            const SizedBox(height: 32),
-            _buildHabitItem(
-              title: "Đọc sách",
-              subtitle: "30p",
-              streak: "5 ngày",
-              icon: Icons.menu_book,
-              iconColor: Colors.indigo,
-              isCompleted: true,
-            ),
-            const SizedBox(height: 16),
-            _buildHabitItem(
-              title: "Uống 2L nước",
-              subtitle: "Tiến trình",
-              streak: "12 ngày",
-              icon: Icons.water_drop,
-              iconColor: Colors.lightBlue,
-              isCompleted: false,
-              isWater: true,
-            ),
-            const SizedBox(height: 24),
-            Row(
-              children: [
-                Expanded(child: _buildMotivationCard()),
-                const SizedBox(width: 16),
-                Expanded(child: _buildDailyGoalCard()),
-              ],
-            ),
-            const SizedBox(height: 120),
-          ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {},
-        backgroundColor: primaryColor,
-        shape: const CircleBorder(),
-        child: const Icon(Icons.add, color: Colors.white, size: 30),
-      ),
-      bottomNavigationBar: _buildBottomNav(context),
     );
   }
 
-  Widget _buildEditorialHeader() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text("THÀNH TỰU HÔM NAY",
-            style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1.5, color: primaryColor)),
-        const Text("Thói quen của bạn",
-            style: TextStyle(fontSize: 34, fontWeight: FontWeight.w800, letterSpacing: -1)),
-        const Text("Duy trì kỷ luật để kiến tạo tự do.", style: TextStyle(color: Colors.grey, fontSize: 14)),
-      ],
+  @override
+  Widget build(BuildContext context) {
+    String monthYearStr = DateFormat('THÁNG MM, yyyy').format(_selectedDate).toUpperCase();
+
+    return Scaffold(
+      backgroundColor: bgColor,
+      appBar: _buildAppBar(),
+      body: RefreshIndicator(
+        onRefresh: _refreshData,
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(monthYearStr, style: const TextStyle(color: Colors.grey, fontWeight: FontWeight.bold, fontSize: 13)),
+                  Icon(Icons.calendar_month_outlined, color: primaryColor, size: 20),
+                ],
+              ),
+              const SizedBox(height: 16),
+              _buildCalendarHeader(),
+              const SizedBox(height: 32),
+              isLoading
+                  ? const Center(child: Padding(padding: EdgeInsets.all(20), child: CircularProgressIndicator()))
+                  : _buildHabitList(),
+              const SizedBox(height: 24),
+              _buildBottomDashboard(),
+              const SizedBox(height: 100),
+            ],
+          ),
+        ),
+      ),
+      floatingActionButton: _buildFAB(),
+      bottomNavigationBar: _buildBottomNav(),
     );
   }
+
+  Future<void> _refreshData() async {
+    await _loadHabitData();
+  }
+
+  PreferredSizeWidget _buildAppBar() => AppBar(
+    backgroundColor: bgColor, elevation: 0,
+    automaticallyImplyLeading: false,
+    title: const Text('Digital Curator', style: TextStyle(color: Color(0xFF4647D3), fontWeight: FontWeight.w900, fontSize: 18)),
+    centerTitle: true,
+    actions: [IconButton(icon: const Icon(Icons.settings_outlined, color: Colors.grey), onPressed: () {})],
+  );
 
   Widget _buildCalendarHeader() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        const Text("THÁNG 10, 2023", style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey)),
-        Icon(Icons.calendar_month, color: primaryColor, size: 20),
-      ],
-    );
-  }
+      children: _weekDays.map((day) {
+        bool isSelected = day.day == _selectedDate.day && day.month == _selectedDate.month;
+        String weekdayStr = DateFormat('E').format(day).replaceFirst('Mon', 'T2').replaceFirst('Tue', 'T3').replaceFirst('Wed', 'T4').replaceFirst('Thu', 'T5').replaceFirst('Fri', 'T6').replaceFirst('Sat', 'T7').replaceFirst('Sun', 'CN');
 
-  Widget _buildCalendarStrip() {
-    final days = [
-      {'d': 'T2', 'n': '23'},
-      {'d': 'T3', 'n': '24'},
-      {'d': 'T4', 'n': '25'}, // Active
-      {'d': 'T5', 'n': '26'},
-      {'d': 'T6', 'n': '27'},
-    ];
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      physics: const BouncingScrollPhysics(),
-      child: Row(
-        children: days.map((day) {
-          bool isActive = day['n'] == '25';
-          return Container(
-            width: 56, height: 80,
-            margin: const EdgeInsets.only(right: 16),
+        return GestureDetector(
+          onTap: () {
+            setState(() => _selectedDate = day);
+            _loadHabitData();
+          },
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
-              color: isActive ? primaryColor : surfaceLow,
+              color: isSelected ? primaryColor : surfaceLow.withOpacity(0.6),
               borderRadius: BorderRadius.circular(16),
             ),
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(day['d']!, style: TextStyle(color: isActive ? Colors.white70 : Colors.grey, fontSize: 10, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 4),
-                Text(day['n']!, style: TextStyle(color: isActive ? Colors.white : Colors.black87, fontSize: 18, fontWeight: FontWeight.bold)),
+                Text(weekdayStr, style: TextStyle(color: isSelected ? Colors.white70 : Colors.grey, fontSize: 12, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 6),
+                Text('${day.day}', style: TextStyle(color: isSelected ? Colors.white : Colors.black87, fontSize: 16, fontWeight: FontWeight.w900)),
               ],
             ),
-          );
-        }).toList(),
-      ),
+          ),
+        );
+      }).toList(),
     );
   }
 
-  Widget _buildAIInsight() {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.6),
-        borderRadius: BorderRadius.circular(16),
-        border: Border(left: BorderSide(color: primaryColor, width: 4)),
-      ),
-      child: Row(
-        children: [
-          Icon(Icons.auto_awesome, color: primaryColor, size: 24),
-          const SizedBox(width: 16),
-          const Expanded(
-            child: Text(
-              "Bạn đã hoàn thành thói quen \"Đọc sách\" 5 ngày liên tục. Hãy thử tăng lên 40 phút nhé.",
-              style: TextStyle(fontSize: 12, color: Colors.black54, height: 1.4),
-            ),
-          ),
-        ],
-      ),
-    );
+  Widget _buildHabitList() {
+    if (habits.isEmpty) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.all(20.0),
+          child: Text("Hôm nay không có thói quen nào. Hãy thêm mới!", style: TextStyle(color: Colors.grey)),
+        ),
+      );
+    }
+    return Column(children: habits.map((h) => _buildHabitItem(habit: h)).toList());
   }
 
-  Widget _buildHabitItem({required String title, required String streak, required IconData icon, required Color iconColor, required bool isCompleted, bool isWater = false, String? subtitle}) {
+  // 🌟 NÂNG CẤP CHUẨN KIỂU: Đổi sang nhận diện tham số đặt tên {required Map habit} an toàn tuyệt đối
+  Widget _buildHabitItem({required Map habit}) {
+    bool isDone = habit['is_completed'] == true;
     return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20)),
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.01), blurRadius: 10)]),
       child: Row(
         children: [
-          Container(
-            width: 48, height: 48,
-            decoration: BoxDecoration(color: iconColor.withOpacity(0.1), borderRadius: BorderRadius.circular(16)),
-            child: Icon(icon, color: iconColor),
-          ),
-          const SizedBox(width: 16),
+          CircleAvatar(backgroundColor: primaryColor.withOpacity(0.1), radius: 20, child: Icon(Icons.star_rounded, color: primaryColor, size: 20)),
+          const SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-                Row(
-                  children: [
-                    if (isWater)
-                      Row(children: List.generate(5, (i) => Container(width: 6, height: 6, margin: const EdgeInsets.only(right: 4), decoration: BoxDecoration(shape: BoxShape.circle, color: i < 3 ? Colors.lightBlue : Colors.lightBlue.withOpacity(0.2)))))
-                    else
-                      Text(subtitle ?? "", style: const TextStyle(fontSize: 10, color: Colors.grey)),
-                    const SizedBox(width: 12),
-                    Icon(Icons.local_fire_department, size: 14, color: primaryColor),
-                    Text(streak, style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: primaryColor)),
-                  ],
+                Text(
+                    habit['title'] ?? "",
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                        decoration: isDone ? TextDecoration.lineThrough : null,
+                        color: isDone ? Colors.grey : Colors.black87
+                    )
                 ),
+                if (habit['description'] != null && habit['description'].toString().isNotEmpty)
+                  Padding(padding: const EdgeInsets.only(top: 2), child: Text(habit['description'], style: const TextStyle(color: Colors.grey, fontSize: 12))),
               ],
             ),
           ),
-          Icon(isCompleted ? Icons.check_circle : Icons.radio_button_unchecked, color: isCompleted ? primaryColor : Colors.grey[300], size: 32),
+          GestureDetector(
+            onTap: () => _toggleHabit(habit['id']),
+            child: Icon(isDone ? Icons.check_circle : Icons.circle_outlined, color: isDone ? Colors.green : Colors.grey[300], size: 28),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildMotivationCard() {
-    return Container(
-      height: 160, padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(color: primaryColor, borderRadius: BorderRadius.circular(20)),
-      child: const Column(
-        mainAxisAlignment: MainAxisAlignment.end,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text("Động lực hôm nay", style: TextStyle(color: Colors.white70, fontSize: 10)),
-          SizedBox(height: 4),
-          Text("\"Kỷ luật là cầu nối giữa mục tiêu và thành tựu.\"", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
-        ],
-      ),
+  Widget _buildBottomDashboard() {
+    return Row(
+      children: [
+        Expanded(
+          flex: 5,
+          child: Container(
+            height: 140, padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(color: primaryColor, borderRadius: BorderRadius.circular(24)),
+            child: const Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text("Động lực hôm nay", style: TextStyle(color: Colors.white60, fontSize: 11, fontWeight: FontWeight.bold)),
+                SizedBox(height: 8),
+                Text('"Kỷ luật là cầu nối giữa mục tiêu và thành tựu."', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13, height: 1.4)),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(width: 14),
+        Expanded(
+          flex: 5,
+          child: Container(
+            height: 140,
+            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(24)),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    SizedBox(
+                      width: 65, height: 65,
+                      child: CircularProgressIndicator(
+                        value: progressPercentage / 100,
+                        strokeWidth: 6, backgroundColor: surfaceLow,
+                        valueColor: AlwaysStoppedAnimation<Color>(primaryColor),
+                      ),
+                    ),
+                    Text('$progressPercentage%', style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 15)),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                const Text("MỤC TIÊU NGÀY", style: TextStyle(color: Colors.grey, fontSize: 9, fontWeight: FontWeight.bold, letterSpacing: 0.5)),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 
-  Widget _buildDailyGoalCard() {
-    return Container(
-      height: 160, padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20)),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Stack(alignment: Alignment.center, children: [
-            SizedBox(width: 56, height: 56, child: CircularProgressIndicator(value: 0.75, strokeWidth: 4, backgroundColor: surfaceLow, valueColor: AlwaysStoppedAnimation(primaryColor))),
-            const Text("75%", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-          ]),
-          const SizedBox(height: 12),
-          const Text("MỤC TIÊU NGÀY", style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Colors.grey)),
-        ],
-      ),
-    );
-  }
+  // 🌟 ĐÃ LIÊN KẾT: Bấm nút "+" sẽ bật ngay cửa sổ nhập thói quen
+  Widget _buildFAB() => FloatingActionButton(
+    onPressed: _showAddHabitDialog,
+    backgroundColor: primaryColor, shape: const CircleBorder(),
+    child: const Icon(Icons.add, color: Colors.white, size: 28),
+  );
 
-  Widget _buildBottomNav(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.only(top: 15, bottom: 35),
-      decoration: const BoxDecoration(color: Colors.white, borderRadius: BorderRadius.vertical(top: Radius.circular(45))),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _buildNavItem(context, Icons.home_outlined, "Home", false, route: '/dashboard'),
-          _buildNavItem(context, Icons.check_circle_outline, "Tasks", false, route: '/tasks'),
-          _buildNavItem(context, Icons.repeat, "Habits", true, route: '/habits'),
-          _buildNavItem(context, Icons.auto_awesome_outlined, "AI", false,route: '/ai'),
-          _buildNavItem(context, Icons.person_outline, "Profile", false,route: '/profile'),
-        ],
-      ),
-    );
-  }
+  Widget _buildBottomNav() => Container(
+    padding: const EdgeInsets.only(top: 12, bottom: 32),
+    decoration: BoxDecoration(color: Colors.white, borderRadius: const BorderRadius.vertical(top: Radius.circular(32)), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 20)]),
+    child: Row(
+      mainAxisAlignment: MainAxisAlignment.spaceAround,
+      children: [
+        _buildNavItem(Icons.home_outlined, "Home", '/dashboard'),
+        _buildNavItem(Icons.check_circle_outline, "Tasks", '/tasks'),
+        _buildNavItem(Icons.repeat, "Habits", '/habits', isActive: true),
+        _buildNavItem(Icons.auto_awesome_outlined, "AI", '/ai'),
+        _buildNavItem(Icons.person_outline, "Profile", '/profile'),
+      ],
+    ),
+  );
 
-  Widget _buildNavItem(BuildContext context, IconData icon, String label, bool isActive, {String? route}) {
-    return InkWell(
-      onTap: () { if (route != null) Navigator.pushNamed(context, route); },
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, color: isActive ? primaryColor : Colors.grey[400], size: 28),
-          const SizedBox(height: 4),
-          Text(label, style: TextStyle(color: isActive ? primaryColor : Colors.grey[400], fontSize: 10, fontWeight: FontWeight.bold)),
-        ],
-      ),
-    );
-  }
+  Widget _buildNavItem(IconData icon, String label, String route, {bool isActive = false}) => GestureDetector(
+    onTap: () { if (!isActive) Navigator.pushReplacementNamed(context, route); },
+    child: Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, color: isActive ? primaryColor : Colors.grey[400], size: 24),
+        const SizedBox(height: 4),
+        Text(label, style: TextStyle(color: isActive ? primaryColor : Colors.grey[400], fontSize: 10, fontWeight: FontWeight.bold)),
+      ],
+    ),
+  );
 }

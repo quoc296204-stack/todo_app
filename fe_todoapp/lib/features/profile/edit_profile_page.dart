@@ -73,17 +73,17 @@ class EditProfilePage extends StatelessWidget {
 
             const SizedBox(height: 24),
 
-            // PHẦN PASSWORD - ĐÃ FIX THÊM ICON ĐỂ KHÔNG LỖI
-            _buildFormSection(
-              title: "Đổi mật khẩu",
-              icon: Icons.lock_outline, // Đã thêm tham số icon bắt buộc vào đây
-              isPasswordSection: true,
-              children: [
-                _buildInputField("Mật khẩu hiện tại", "••••••••", isPassword: true),
-                _buildInputField("Mật khẩu mới", "••••••••", isPassword: true),
-                _buildInputField("Xác nhận mật khẩu", "••••••••", isPassword: true),
-              ],
-            ),
+            // // PHẦN PASSWORD - ĐÃ FIX THÊM ICON ĐỂ KHÔNG LỖI
+            // _buildFormSection(
+            //   title: "Đổi mật khẩu",
+            //   icon: Icons.lock_outline, // Đã thêm tham số icon bắt buộc vào đây
+            //   isPasswordSection: true,
+            //   children: [
+            //     _buildInputField("Mật khẩu hiện tại", "••••••••", isPassword: true),
+            //     _buildInputField("Mật khẩu mới", "••••••••", isPassword: true),
+            //     _buildInputField("Xác nhận mật khẩu", "••••••••", isPassword: true),
+            //   ],
+            // ),
 
             const SizedBox(height: 40),
             _buildActionButtons(context),
