@@ -154,7 +154,7 @@ class _HabitPageState extends State<HabitPage> {
   // 🌟 MỚI: Hàm hiển thị Dialog sửa thói quen
   void _showEditHabitDialog(Map habit) {
     final titleController = TextEditingController(text: habit['title'] ?? '');
-    final descController = TextEditingController(text: habit['description'] ?? '');
+    final descController = TextEditingController(text: habit['subtitle'] ?? '');
 
     showDialog(
       context: context,
@@ -376,8 +376,8 @@ class _HabitPageState extends State<HabitPage> {
                               color: isDone ? Colors.grey : Colors.black87
                           )
                       ),
-                      if (habit['description'] != null && habit['description'].toString().isNotEmpty)
-                        Padding(padding: const EdgeInsets.only(top: 2), child: Text(habit['description'], style: const TextStyle(color: Colors.grey, fontSize: 12))),
+                      if (habit['subtitle'] != null && habit['subtitle'].toString().isNotEmpty)
+                        Padding(padding: const EdgeInsets.only(top: 2), child: Text(habit['subtitle'], style: const TextStyle(color: Colors.grey, fontSize: 12))),
                     ],
                   ),
                 ),

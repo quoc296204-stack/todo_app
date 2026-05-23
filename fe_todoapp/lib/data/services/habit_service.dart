@@ -46,7 +46,7 @@ class HabitService {
       final response = await http.post(
         Uri.parse('${AppConfig.baseUrl}/habits/'),
         headers: {"Content-Type": "application/json"},
-        body: jsonEncode({"user_id": userId, "title": title, "description": description}),
+        body: jsonEncode({"user_id": userId, "title": title, "subtitle": description}),
       ).timeout(timeout);
       return response.statusCode == 200 || response.statusCode == 201;
     } catch (_) {
@@ -57,7 +57,7 @@ class HabitService {
   Future<bool> deleteHabit(int habitId) async {
     try {
       final response = await http.delete(
-        Uri.parse('${AppConfig.baseUrl}/habits/delete/$habitId'),
+        Uri.parse('${AppConfig.baseUrl}/habits/$habitId'),
         headers: {"Content-Type": "application/json"},
       ).timeout(timeout);
 
@@ -74,7 +74,7 @@ class HabitService {
       final response = await http.put(
         Uri.parse('${AppConfig.baseUrl}/habits/update/$habitId'),
         headers: {"Content-Type": "application/json"},
-        body: jsonEncode({"title": title, "description": description}),
+        body: jsonEncode({"title": title, "subtitle": description}),
       ).timeout(timeout);
 
       return response.statusCode == 200;

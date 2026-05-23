@@ -1,68 +1,81 @@
 from sqlalchemy.orm import Session
+from sqlalchemy import cast, Date
 from app.models.habit_models import Habit, HabitLog
 from datetime import date, timedelta
-from app.schemas.habit_schema import HabitCreate
+from app.schemas.habit_schema import HabitCreate, HabitUpdate
 
-# 1. XEM DANH SÁCH: (Giữ nguyên logic tính Streak của Hiếu)
-def get_user_habits(db: Session, user_id: int):
+# 1. XEM DANH SÁCH
+def get_user_habits(db: Session, user_id: int, target_date: date):
     habits = db.query(Habit).filter(Habit.user_id == user_id).all()
-    today = date.today()
-    for habit in habits:
-        log_today = db.query(HabitLog).filter(HabitLog.habit_id == habit.id, HabitLog.completed_at == today).first()
-        habit.is_completed_today = True if log_today else False
-        
-        streak = 0
-        check_date = today if habit.is_completed_today else today - timedelta(days=1)
-        while True:
-            log = db.query(HabitLog).filter(HabitLog.habit_id == habit.id, HabitLog.completed_at == check_date).first()
-            if log:
-                streak += 1
-                check_date -= timedelta(days=1)
-            else:
-                break
-        habit.current_streak = streak
-    return habits
+    
+    logs = db.query(HabitLog).filter(
+        HabitLog.user_id == user_id, 
+        cast(HabitLog.completed_at, Date) == target_date
+    ).all()
+    completed_ids = {log.habit_id for log in logs}
+    
+    result = []
+    for h in habits:
+        result.append({
+            "id": h.id,
+            "title": h.title,
+            "subtitle": h.subtitle,
+            "is_completed": h.id in completed_ids
+        })
+    return result
 
-# 2. THÊM MỚI
+# 2. TOGGLE CHECK-IN
+def toggle_habit_status(db: Session, habit_id: int, target_date: date):
+    habit = db.query(Habit).filter(Habit.id == habit_id).first()
+    if not habit:
+        return None
+
+    log = db.query(HabitLog).filter(
+        HabitLog.habit_id == habit_id, 
+        cast(HabitLog.completed_at, Date) == target_date
+    ).first()
+    
+    is_done = False
+    if log:
+        db.delete(log)
+    else:
+        db.add(HabitLog(habit_id=habit_id, user_id=habit.user_id, completed_at=target_date))
+        is_done = True
+        
+    db.commit()
+    
+    # Tính lại phần trăm
+    total = db.query(Habit).filter(Habit.user_id == habit.user_id).count()
+    done = db.query(HabitLog).filter(
+        HabitLog.user_id == habit.user_id, 
+        cast(HabitLog.completed_at, Date) == target_date
+    ).count()
+    percent = int((done / total) * 100) if total > 0 else 0
+    
+    return {"is_completed": is_done, "new_progress": percent}
+
+# 3. TẠO MỚI
 def create_new_habit(db: Session, habit_data: HabitCreate):
     new_habit = Habit(user_id=habit_data.user_id, title=habit_data.title, subtitle=habit_data.subtitle)
     db.add(new_habit)
     db.commit()
-    db.refresh(new_habit)
-    # Gán giá trị ảo để Pydantic không báo lỗi ResponseValidationError
-    new_habit.is_completed_today = False
-    new_habit.current_streak = 0
     return new_habit
 
-# 3. CHỈNH SỬA: Tìm đúng cái cũ để sửa, không tạo mới!
-def update_habit(db: Session, habit_id: int, data: dict):
+# 4. CẬP NHẬT
+def update_habit(db: Session, habit_id: int, habit_data: HabitUpdate):
     habit = db.query(Habit).filter(Habit.id == habit_id).first()
     if habit:
-        habit.title = data.get('title', habit.title)
-        habit.subtitle = data.get('subtitle', habit.subtitle)
+        habit.title = habit_data.title
+        habit.subtitle = habit_data.subtitle
         db.commit()
-        db.refresh(habit)
-        habit.is_completed_today = False
-        habit.current_streak = 0
     return habit
 
-# 4. XÓA: (Sửa lỗi remove_habit/delete_habit)
+# 5. XÓA (Xóa an toàn không bị lỗi khóa ngoại)
 def delete_habit(db: Session, habit_id: int):
     habit = db.query(Habit).filter(Habit.id == habit_id).first()
     if habit:
-        db.query(HabitLog).filter(HabitLog.habit_id == habit_id).delete() # Xóa log trước
+        db.query(HabitLog).filter(HabitLog.habit_id == habit_id).delete()
         db.delete(habit)
         db.commit()
         return True
     return False
-
-# 5. ĐÁNH DẤU: (Khớp tên hàm toggle_habit_status với Route)
-def toggle_habit_status(db: Session, habit_id: int):
-    today = date.today()
-    log = db.query(HabitLog).filter(HabitLog.habit_id == habit_id, HabitLog.completed_at == today).first()
-    if log:
-        db.delete(log)
-    else:
-        db.add(HabitLog(habit_id=habit_id, completed_at=today))
-    db.commit()
-    return {"status": "success"}
