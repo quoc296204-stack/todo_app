@@ -25,7 +25,6 @@ Một ứng dụng quản lý công việc thông minh, tích hợp trí tuệ n
 ## 📂 Cấu trúc dự án
 
 ```text
-D:\do_an \
 
 ├── be_quoc/                # Backend (FastAPI)
 │   ├── app/
@@ -44,22 +43,36 @@ D:\do_an \
 
 ## 🚀 Hướng dẫn cài đặt
 
-### 1. Backend
+🛠️ Công cụ yêu cầu: Python (3.9+), Flutter SDK, trình soạn thảo (như VS Code).
 
-1. Di chuyển vào thư mục `be_quoc`: `cd be_quoc`
-2. Cài đặt thư viện: `pip install -r requirements.txt`
-3. Khởi chạy server: `uvicorn app.main:app --reload`
+### 1. Khởi chạy Backend (Python/FastAPI)
+Mở Terminal và chạy lần lượt:
 
-### 2. Frontend
+Chuyển thư mục: cd be_quoc
 
-1. Di chuyển vào thư mục `fe_todoapp`: `cd fe_todoapp`
-2. Cài đặt thư viện: `flutter pub get`
-3. Chạy ứng dụng: `flutter run`
+Cài thư viện: pip install -r requirements.txt (Khuyến nghị dùng môi trường ảo venv).
 
----
+Chạy server: uvicorn app.main:app --reload (Chạy ở port 8000).
 
-*Dự án phát triển bởi [sirya] - Đồ án  chuyên ngành khoa học máy tính.*.
+### 2. Khởi chạy Frontend (Flutter)
+Mở một Terminal mới và chạy:
 
----
+Chuyển thư mục: cd fe_todoapp
 
+Tải thư viện: flutter pub get
 
+Chạy ứng dụng: flutter run
+
+Mẹo chọn thiết bị: Xem danh sách bằng flutter devices ➔ Chạy đích danh bằng flutter run -d <mã_thiết_bị>.
+
+### 3. Lưu ý khi chạy trên Điện thoại thật (Dùng Ngrok)
+Vấn đề: Điện thoại không thể gọi API qua 127.0.0.1 (localhost) của máy tính.
+Cách xử lý:
+
+Chạy lệnh: ngrok http 8000 (để public port của Backend).
+
+Copy đường dẫn https://...ngrok-free.app hiển thị trên màn hình Ngrok.
+
+Thay thế địa chỉ http://127.0.0.1:8000 trong code cấu hình API của Flutter bằng đường dẫn vừa copy.
+
+Chạy lại flutter run.
