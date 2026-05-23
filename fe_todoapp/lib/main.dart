@@ -16,6 +16,7 @@ import 'package:fe_todoapp/features/profile/notification_settings_page.dart';
 import 'package:fe_todoapp/features/profile/support_page.dart';
 
 import 'features/profile/change_password_page.dart';
+import 'features/task/category_page.dart';
 
 // Class fix server ảnh cho Android Emulator
 class MyHttpOverrides extends HttpOverrides {
@@ -64,6 +65,7 @@ class PersonalAiManagerApp extends StatelessWidget {
         '/notification_settings': (context) => const NotificationSettingsPage(),
         '/support' : (context) => const SupportPage(),
         '/task_detail': (context) => const TaskDetailPage(),
+        '/categories': (context) => const CategoryPage(),
       },
     );
   }
