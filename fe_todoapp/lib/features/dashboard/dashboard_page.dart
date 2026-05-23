@@ -1,10 +1,43 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
+import 'package:http/http.dart' as http;
+import 'package:fe_todoapp/core/constants.dart';
 import '../../../data/services/task_service.dart';
 import '../../../data/services/habit_service.dart';
 
+// ==========================================
+// 1. DỊCH VỤ LẤY GỢI Ý (Nên tách ra file riêng, nhưng để đây cũng ok)
+// ==========================================
+class SuggestionService {
+  Future<Map<String, String>> getSuggestion(int userId) async {
+    try {
+      final response = await http.get(
+        Uri.parse('${AppConfig.baseUrl}/ai/suggestions/$userId'),
+      ).timeout(const Duration(seconds: 5));
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(utf8.decode(response.bodyBytes));
+        return {
+          "title": data["title"] ?? "Gợi ý từ Curator",
+          "message": data["message"] ?? "Bạn đang làm rất tốt!"
+        };
+      }
+    } catch (e) {
+      debugPrint("Lỗi tải gợi ý: $e");
+    }
+    return {
+      "title": "Chưa có gợi ý ✨",
+      "message": "Bạn đang làm rất tốt, hãy tiếp tục phát huy nhé!"
+    };
+  }
+}
+
+// ==========================================
+// 2. MÀN HÌNH CHÍNH DASHBOARD
+// ==========================================
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
 
@@ -171,6 +204,12 @@ class _DashboardPageState extends State<DashboardPage> with WidgetsBindingObserv
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _buildHeader(),
+                const SizedBox(height: 24),
+
+                // LẮP THẺ GỢI Ý VÀO ĐÂY (Sẽ gọi UI bên dưới)
+                if (currentUserId != null)
+                  CuratorSuggestionCard(userId: currentUserId!),
+
                 const SizedBox(height: 32),
                 _buildSectionHeader("Công việc hôm nay", actionText: "TẤT CẢ", onAction: () => Navigator.pushReplacementNamed(context, '/tasks')),
                 const SizedBox(height: 16),
@@ -201,13 +240,25 @@ class _DashboardPageState extends State<DashboardPage> with WidgetsBindingObserv
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(children: [
-                CircleAvatar(backgroundColor: primaryColor.withOpacity(0.2), radius: 20, child: Icon(Icons.person, color: primaryColor)),
-                const SizedBox(width: 12),
-                Text("Xin chào, $userName!", style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w900, letterSpacing: -0.5)),
-              ]),
+              Row(
+                children: [
+                  CircleAvatar(backgroundColor: primaryColor.withOpacity(0.2), radius: 20, child: Icon(Icons.person, color: primaryColor)),
+                  const SizedBox(width: 12),
+                  // ĐÃ SỬA LỖI OVERFLOW: Bọc Text trong Expanded
+                  Expanded(
+                    child: Text(
+                      "Xin chào, $userName!",
+                      style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w900, letterSpacing: -0.5),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
               const SizedBox(height: 8),
-              Padding(padding: const EdgeInsets.only(left: 52), child: Text("$_timeString   •   $_dateString", style: TextStyle(color: Colors.grey[600], fontSize: 13, fontWeight: FontWeight.w700))),
+              Padding(
+                padding: const EdgeInsets.only(left: 52),
+                child: Text("$_timeString   •   $_dateString", style: TextStyle(color: Colors.grey[600], fontSize: 13, fontWeight: FontWeight.w700)),
+              ),
             ],
           ),
         ),
@@ -279,32 +330,19 @@ class _DashboardPageState extends State<DashboardPage> with WidgetsBindingObserv
   }
 
   Widget _buildCharts() {
-    // --- 1. TÍNH TOÁN TIẾN ĐỘ CÔNG VIỆC ---
     int totalTasks = todayTasks.length;
-    int doneTasks = todayTasks.where((t) =>
-    t['is_completed'] == 1 || t['is_completed'] == true).length;
+    int doneTasks = todayTasks.where((t) => t['is_completed'] == 1 || t['is_completed'] == true).length;
     double taskPercent = totalTasks > 0 ? (doneTasks / totalTasks) : 0;
 
-    // --- 2. TÍNH TOÁN TIẾN ĐỘ THÓI QUEN ---
     int totalHabits = todayHabits.length;
-    int doneHabits = todayHabits.where((h) =>
-    h['is_completed'] == 1 || h['is_completed'] == true).length;
+    int doneHabits = todayHabits.where((h) => h['is_completed'] == 1 || h['is_completed'] == true).length;
     double habitPercent = totalHabits > 0 ? (doneHabits / totalHabits) : 0;
 
-    // --- 3. HIỂN THỊ 2 BIỂU ĐỒ NẰM NGANG NHAU ---
     return Row(
       children: [
-        // Biểu đồ Công việc (Bên trái)
-        Expanded(
-          child: _buildChartCard("Công việc", taskPercent, doneTasks, totalTasks),
-        ),
-
-        const SizedBox(width: 16), // Khoảng cách giữa 2 biểu đồ
-
-        // Biểu đồ Thói quen (Bên phải)
-        Expanded(
-          child: _buildChartCard("Thói quen", habitPercent, doneHabits, totalHabits),
-        ),
+        Expanded(child: _buildChartCard("Công việc", taskPercent, doneTasks, totalTasks)),
+        const SizedBox(width: 16),
+        Expanded(child: _buildChartCard("Thói quen", habitPercent, doneHabits, totalHabits)),
       ],
     );
   }
@@ -312,56 +350,25 @@ class _DashboardPageState extends State<DashboardPage> with WidgetsBindingObserv
   Widget _buildChartCard(String title, double percent, int done, int total) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-      ),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(24)),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // 1. Dùng Stack để lồng chữ vào giữa vòng tròn
           SizedBox(
-            height: 80, // Chiều cao vòng tròn (bạn có thể tăng giảm tùy ý)
-            width: 80,  // Chiều rộng vòng tròn
+            height: 80, width: 80,
             child: Stack(
               fit: StackFit.expand,
               children: [
-                // Vòng tròn tiến độ
                 CircularProgressIndicator(
-                  value: percent,
-                  strokeWidth: 8, // Độ dày của viền (mặc định là 4)
-                  backgroundColor: surfaceLow, // Màu viền xám mờ ở dưới
-                  valueColor: AlwaysStoppedAnimation(
-                    percent == 1.0 ? Colors.green : primaryColor,
-                  ),
+                  value: percent, strokeWidth: 8, backgroundColor: surfaceLow,
+                  valueColor: AlwaysStoppedAnimation(percent == 1.0 ? Colors.green : primaryColor),
                 ),
-                // Chữ % nằm ở chính giữa
-                Center(
-                  child: Text(
-                    "${(percent * 100).toInt()}%",
-                    style: const TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w900, // Chữ đậm giống ảnh
-                      color: Colors.black87,
-                    ),
-                  ),
-                ),
+                Center(child: Text("${(percent * 100).toInt()}%", style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: Colors.black87))),
               ],
             ),
           ),
-
           const SizedBox(height: 16),
-
-          // 2. Dòng chữ tiêu đề nằm ở dưới (Công việc / Thói quen)
-          Text(
-            title.toUpperCase(), // Chuyển thành in hoa giống chữ "MỤC TIÊU NGÀY"
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 12,
-              color: Colors.grey[600],
-              letterSpacing: 0.5, // Giãn chữ ra một chút cho sang
-            ),
-          ),
+          Text(title.toUpperCase(), style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.grey[600], letterSpacing: 0.5)),
         ],
       ),
     );
@@ -386,4 +393,80 @@ class _DashboardPageState extends State<DashboardPage> with WidgetsBindingObserv
     onTap: () { if (!isActive) Navigator.pushReplacementNamed(context, route); },
     child: Column(mainAxisSize: MainAxisSize.min, children: [Icon(icon, color: isActive ? primaryColor : Colors.grey[400], size: 24), const SizedBox(height: 4), Text(label, style: TextStyle(color: isActive ? primaryColor : Colors.grey[400], fontSize: 10, fontWeight: FontWeight.bold))]),
   );
+}
+
+// ==========================================
+// 3. WIDGET GIAO DIỆN "GỢI Ý TỪ CURATOR"
+// ==========================================
+class CuratorSuggestionCard extends StatefulWidget {
+  final int userId;
+  const CuratorSuggestionCard({super.key, required this.userId});
+
+  @override
+  State<CuratorSuggestionCard> createState() => _CuratorSuggestionCardState();
+}
+
+class _CuratorSuggestionCardState extends State<CuratorSuggestionCard> {
+  final SuggestionService _service = SuggestionService();
+  String title = "Đang phân tích...";
+  String message = "Curator đang xem xét dữ liệu của bạn...";
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSuggestion();
+  }
+
+  Future<void> _loadSuggestion() async {
+    final result = await _service.getSuggestion(widget.userId);
+    if (mounted) {
+      setState(() {
+        title = result['title']!;
+        message = result['message']!;
+        isLoading = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: const Color(0xFFC7C9F7), width: 1.5), // Viền tím pastel
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF4647D3).withOpacity(0.05),
+            blurRadius: 15,
+            offset: const Offset(0, 5),
+          )
+        ],
+      ),
+      child: isLoading
+          ? const Center(child: CircularProgressIndicator(strokeWidth: 2))
+          : Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: const [
+
+              SizedBox(width: 8),
+              Text(
+                "Nhắc nhở",
+                style: TextStyle(color: Color(0xFF4647D3), fontWeight: FontWeight.w800, fontSize: 14),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Text(title, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: Colors.black87)),
+          const SizedBox(height: 8),
+          Text(message, style: const TextStyle(fontSize: 14, height: 1.5, color: Colors.black54)),
+        ],
+      ),
+    );
+  }
 }

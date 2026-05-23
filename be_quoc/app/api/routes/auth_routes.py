@@ -43,8 +43,11 @@ def get_productivity_report(user_id: int, db: Session = Depends(get_db)):
     today = datetime.now().date()
     seven_days_ago = today - timedelta(days=7)
     fourteen_days_ago = today - timedelta(days=14)
+    first_day_of_month = today.replace(day=1) # Lấy ngày mùng 1 của tháng hiện tại
 
-    # 1. TỶ LỆ HOÀN THÀNH (7 ngày qua)
+    # ==========================================
+    # 1. TỶ LỆ HOÀN THÀNH & TĂNG TRƯỞNG (7 ngày qua)
+    # ==========================================
     total_tasks_7d = db.query(Task).filter(
         Task.user_id == user_id,
         func.date(Task.created_at) >= seven_days_ago,
@@ -60,7 +63,6 @@ def get_productivity_report(user_id: int, db: Session = Depends(get_db)):
 
     completion_rate = int((completed_tasks_7d / total_tasks_7d) * 100) if total_tasks_7d > 0 else 0
 
-    # 2. TĂNG TRƯỞNG
     completed_tasks_prev_7d = db.query(Task).filter(
         Task.user_id == user_id,
         Task.is_completed == True,
@@ -76,7 +78,9 @@ def get_productivity_report(user_id: int, db: Session = Depends(get_db)):
 
     growth_label = f"{growth_rate}% so với tuần trước"
 
-    # 3. THÓI QUEN
+    # ==========================================
+    # 2. THỐNG KÊ THÓI QUEN (Tổng quan)
+    # ==========================================
     total_habits = db.query(Habit).filter(Habit.user_id == user_id).count()
     habit_rate = 0
     if total_habits > 0:
@@ -88,25 +92,50 @@ def get_productivity_report(user_id: int, db: Session = Depends(get_db)):
         ).count()
         habit_rate = min(int((actual_logs / max_possible_logs) * 100), 100)
 
-    # 4. BIỂU ĐỒ
+    # ==========================================
+    # 3. THỐNG KÊ THÁNG HIỆN TẠI (MỚI BỔ SUNG)
+    # ==========================================
+    monthly_total_tasks = db.query(Task).filter(
+        Task.user_id == user_id,
+        func.date(Task.created_at) >= first_day_of_month,
+        func.date(Task.created_at) <= today
+    ).count()
+
+    monthly_task_completed = db.query(Task).filter(
+        Task.user_id == user_id,
+        Task.is_completed == True,
+        func.date(Task.created_at) >= first_day_of_month,
+        func.date(Task.created_at) <= today
+    ).count()
+
+    monthly_task_rate = int((monthly_task_completed / monthly_total_tasks) * 100) if monthly_total_tasks > 0 else 0
+    current_month_str = f"tháng {today.month}"
+
+    # ==========================================
+    # 4. DỮ LIỆU BIỂU ĐỒ CỘT (7 NGÀY QUA)
+    # ==========================================
     days_name = ["T2", "T3", "T4", "T5", "T6", "T7", "CN"]
     chart_data = {}
-    max_tasks_in_day = 0
-    raw_chart = {}
+    habit_chart_data = {}
 
     for i in range(6, -1, -1):
         target_date = today - timedelta(days=i)
         weekday_str = days_name[target_date.weekday()]
-        daily_count = db.query(Task).filter(
+        
+        # Đếm số task hoàn thành trong ngày
+        daily_task_count = db.query(Task).filter(
             Task.user_id == user_id,
             Task.is_completed == True,
             func.date(Task.created_at) == target_date
         ).count()
-        raw_chart[weekday_str] = daily_count
-        if daily_count > max_tasks_in_day: max_tasks_in_day = daily_count
-
-    for day, count in raw_chart.items():
-        chart_data[day] = round(count / max_tasks_in_day, 2) if max_tasks_in_day > 0 else 0.0
+        chart_data[weekday_str] = daily_task_count  # Trả về số thực tế, không chia tỷ lệ nữa
+        
+        # Đếm số thói quen hoàn thành trong ngày
+        daily_habit_count = db.query(HabitLog).filter(
+            HabitLog.user_id == user_id,
+            func.date(HabitLog.completed_at) == target_date
+        ).count()
+        habit_chart_data[weekday_str] = daily_habit_count
 
     return {
         "status": 200, 
@@ -115,6 +144,12 @@ def get_productivity_report(user_id: int, db: Session = Depends(get_db)):
             "growth_rate": abs(growth_rate),
             "growth_label": growth_label,
             "habit_rate": habit_rate,
-            "chart_data": chart_data
+            "chart_data": chart_data,
+            # Các key mới đẩy về cho FE
+            "habit_chart_data": habit_chart_data,
+            "current_month": current_month_str,
+            "monthly_total_tasks": monthly_total_tasks,
+            "monthly_task_completed": monthly_task_completed,
+            "monthly_task_rate": monthly_task_rate
         }
     }
