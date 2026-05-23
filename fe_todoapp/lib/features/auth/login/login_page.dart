@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../data/services/auth_service.dart';
-import '../../../data/services/auth_service.dart' as _authService;
+
 
 // --- Hệ thống màu sắc (Theme Colors) ---
 const Color kPrimary = Color(0xFF4647D3);
@@ -33,6 +34,7 @@ class _LoginPageState extends State<LoginPage> {
   bool _isLoading = false; // Trạng thái chờ khi gọi API
 
   /// Xử lý logic đăng nhập
+  /// Xử lý logic đăng nhập
   Future<void> _handleLogin() async {
     final email = _emailController.text.trim();
     final password = _passwordController.text.trim();
@@ -52,6 +54,34 @@ class _LoginPageState extends State<LoginPage> {
 
       if (result['success']) {
         _showMessage('Đăng nhập thành công! Chào mừng trở lại.', isError: false);
+
+        final prefs = await SharedPreferences.getInstance();
+        int userIdToSave = result['id'] ?? result['data']['id'];
+        await prefs.setInt('userId', userIdToSave);
+        // --- LOGIC LẤY TÊN THÔNG MINH TỪ JSON LỒNG NHAU ---
+        String extractedName = "bạn"; // Mặc định
+        try {
+          // 1. Đi sâu vào 2 lớp 'user' để lấy data
+          final userData = result['user']['user'];
+
+          // 2. Lấy full_name và email
+          String? fullName = userData['full_name'];
+          String? email = userData['email'];
+
+          // 3. Nếu full_name có thật (không trống), lấy full_name
+          if (fullName != null && fullName.trim().isNotEmpty) {
+            extractedName = fullName;
+          }
+          // 4. Nếu full_name trống (hoặc bạn muốn dự phòng), lấy phần chữ trước @ của email
+          else if (email != null && email.contains('@')) {
+            extractedName = email.split('@')[0]; // Ví dụ: quoc321@gmail.com -> quoc321
+          }
+        } catch (e) {
+          debugPrint("Lỗi trích xuất tên: $e");
+        }
+        // Lưu tên vào bộ nhớ máy
+        await prefs.setString('userName', extractedName);
+        // ------------------------------------------------
 
         // Đợi 0.8s để người dùng thấy thông báo rồi chuyển trang
         Future.delayed(const Duration(milliseconds: 800), () {
@@ -153,10 +183,10 @@ class _LoginPageState extends State<LoginPage> {
         // --- Logo App ---
         Row(
           children: const [
-            Icon(Icons.bubble_chart, color: kPrimary, size: 30),
+            // Icon(Icons.bubble_chart, color: kPrimary, size: 30),
             SizedBox(width: 8),
             Text(
-              'Digital Curator',
+              ' ',
               style: TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.w800,

@@ -6,19 +6,14 @@ from app.db.database import Base
 class User(Base):
     __tablename__ = "users"
 
-    # Khóa chính tự động tăng
-    id = Column(BIGINT(unsigned=True), primary_key=True, index=True)
-    
-    # Thông tin cơ bản (Đã lược bỏ số điện thoại theo yêu cầu của bạn)
-    full_name = Column(String(255), nullable=False)
-    
-    # Email dùng để đăng nhập, phải là duy nhất
-    email = Column(String(255), unique=True, index=True, nullable=False)
-    
-    # Mật khẩu đã được mã hóa (Băm)
-    password = Column(String(255), nullable=False)
-    
-    # Thời điểm tạo tài khoản tự động
-    created_at = Column(DateTime, server_default=func.now())
-
-    # Bạn có thể thêm các trường khác sau này như: avatar_url, bio...
+    id = Column(Integer, primary_key=True, index=True)
+    email = Column(String, unique=True, index=True)
+    password = Column(String)
+    full_name = Column(String)
+    # Các cột mới thêm:
+    phone_number = Column(String, nullable=True)
+    birthday = Column(String, nullable=True) # Hoặc Date tùy bạn set up
+    job_title = Column(String, nullable=True)
+    gender = Column(String, nullable=True)
+    bio = Column(String, nullable=True)
+    avatar_url = Column(String, nullable=True)

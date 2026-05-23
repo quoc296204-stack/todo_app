@@ -5,7 +5,8 @@ from app.db.database import get_db_connection
 from app.models.habit_models import Habit, HabitLog
 from pydantic import BaseModel
 from typing import Optional
-from sqlalchemy import func
+# IMPORT THÊM cast và Date từ sqlalchemy
+from sqlalchemy import cast, Date
 
 router = APIRouter(prefix="/api/habits", tags=["habits"])
 
@@ -26,11 +27,12 @@ def get_habits(user_id: int, selected_date: Optional[str] = Query(None), db: Ses
         
         all_habits = db.query(Habit).filter(Habit.user_id == user_id).all()
         
-        # Dùng func.date() để ép trường completed_at về dạng DATE (YYYY-MM-DD) rồi so sánh
+        # SỬA LỖI Ở ĐÂY: Dùng cast(..., Date) để so sánh chuẩn xác với target_date
         logs = db.query(HabitLog).filter(
             HabitLog.user_id == user_id, 
-            func.date(HabitLog.completed_at) == target_date
+            cast(HabitLog.completed_at, Date) == target_date
         ).all()
+        
         completed_ids = {log.habit_id for log in logs}
         
         result = []
@@ -60,29 +62,29 @@ def toggle_habit_status(habit_id: int, selected_date: Optional[str] = Query(None
         if not habit:
             raise HTTPException(status_code=404, detail="Không tìm thấy thói quen")
             
-        # Kiểm tra xem ngày được chọn đã có bản ghi log nào tồn tại chưa
+        # SỬA LỖI Ở ĐÂY: Dùng cast(..., Date)
         log = db.query(HabitLog).filter(
             HabitLog.habit_id == habit_id, 
-            func.date(HabitLog.completed_at) == target_date
+            cast(HabitLog.completed_at, Date) == target_date
         ).first()
         
         if log:
             db.delete(log)  # Nếu đã có thì xóa bản ghi (Hủy tích chọn)
             is_done = False
         else:
-            # Nếu chưa có thì tạo mới, gộp target_date với giờ hiện tại để lưu vào DateTime ổn định
-            combined_dt = datetime.combine(target_date, datetime.now().time())
-            new_log = HabitLog(habit_id=habit_id, user_id=habit.user_id, completed_at=combined_dt)
+            # Nếu chưa có thì tạo mới
+            # combined_dt = datetime.combine(target_date, datetime.now().time())
+            new_log = HabitLog(habit_id=habit_id, user_id=habit.user_id, completed_at=target_date)
             db.add(new_log)
             is_done = True
             
         db.commit()
         
-        # Tính toán lại phần trăm mục tiêu ngày phục vụ vẽ biểu đồ Flutter
+        # SỬA LỖI Ở ĐÂY: Dùng cast(..., Date)
         total = db.query(Habit).filter(Habit.user_id == habit.user_id).count()
         done = db.query(HabitLog).filter(
             HabitLog.user_id == habit.user_id, 
-            func.date(HabitLog.completed_at) == target_date
+            cast(HabitLog.completed_at, Date) == target_date
         ).count()
         percent = int((done / total) * 100) if total > 0 else 0
         
@@ -92,7 +94,7 @@ def toggle_habit_status(habit_id: int, selected_date: Optional[str] = Query(None
         print(f"[LỖI TOGGLE HABIT]: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
-
+# ... (Phần 3 Tạo mới và Phần 4 Xóa giữ nguyên)
 # 3. TẠO THÓI QUEN MỚI
 @router.post("/")
 def create_habit(habit_data: HabitCreate, db: Session = Depends(get_db_connection)):

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../data/services/auth_service.dart';
 import '../../../core/constants.dart'; // Đảm bảo có AppConfig để lấy IP
 
@@ -47,23 +48,39 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
 
     setState(() => isLoading = true);
 
-    // Gọi API từ AuthService (Giả định userId = 1)
-    final result = await _authService.changePassword(
-        1,
-        oldPwdController.text.trim(),
-        newPwdController.text.trim()
-    );
+    try {
+      // BƯỚC SỬA LỖI: Lấy ID từ bộ nhớ tạm một cách an toàn
+      final prefs = await SharedPreferences.getInstance();
+      final rawUserId = prefs.get('userId');
 
-    if (!mounted) return;
-    setState(() => isLoading = false);
+      if (rawUserId == null) {
+        _showSnackBar("Lỗi: Không tìm thấy thông tin người dùng!", isError: true);
+        setState(() => isLoading = false);
+        return;
+      }
 
-    if (result['status'] == 200) {
-      _showSnackBar("Đổi mật khẩu thành công!", isError: false);
-      // Đợi 1 chút để user kịp thấy SnackBar rồi mới quay lại
-      Future.delayed(const Duration(seconds: 1), () => Navigator.pop(context));
-    } else {
-      // Hiển thị lỗi từ Backend (ví dụ: "Mật khẩu cũ không chính xác")
-      _showSnackBar(result['body']?['detail'] ?? "Đổi mật khẩu thất bại", isError: true);
+      // Chuyển rawUserId về kiểu int (do AuthService của bạn đang nhận tham số int)
+      final userId = int.parse(rawUserId.toString());
+
+      // Gọi API từ AuthService với ID động
+      final result = await _authService.changePassword(
+          userId,
+          oldPwdController.text.trim(),
+          newPwdController.text.trim()
+      );
+
+      if (!mounted) return;
+      setState(() => isLoading = false);
+
+      if (result['status'] == 200) {
+        _showSnackBar("Đổi mật khẩu thành công!", isError: false);
+        Future.delayed(const Duration(seconds: 1), () => Navigator.pop(context));
+      } else {
+        _showSnackBar(result['body']?['detail'] ?? "Đổi mật khẩu thất bại", isError: true);
+      }
+    } catch (e) {
+      setState(() => isLoading = false);
+      _showSnackBar("Có lỗi xảy ra: $e", isError: true);
     }
   }
 

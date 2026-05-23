@@ -1,260 +1,305 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-class ProductivityReportPage extends StatelessWidget {
+import '../../data/services/report_service.dart';
+// import '../../../data/services/report_service.dart'; // Import service của bạn
+
+class ProductivityReportPage extends StatefulWidget {
   const ProductivityReportPage({super.key});
 
-  // --- PALETTE MÀU ---
+  @override
+  State<ProductivityReportPage> createState() => _ProductivityReportPageState();
+}
+
+// class _EditProfilePageState extends State<ProductivityReportPage> { // Giữ tên class State của bạn
+class _ProductivityReportPageState extends State<ProductivityReportPage> {
   final Color primaryColor = const Color(0xFF4647D3);
   final Color bgColor = const Color(0xFFF5F7F9);
-  final Color surfaceColor = Colors.white;
-  final Color tertiaryColor = const Color(0xFF815100);
+
+  // Khởi tạo service
+  // final ReportService _reportService = ReportService();
+  late Future<Map<String, dynamic>?> _reportFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _reportFuture = _initReportData();
+  }
+
+  // Hàm trung gian lấy userId từ SharedPreferences rồi gọi Service
+  final ReportService _reportService = ReportService();
+
+  Future<Map<String, dynamic>?> _initReportData() async {
+    final prefs = await SharedPreferences.getInstance();
+    final rawUserId = prefs.get('userId');
+
+    if (rawUserId == null) return null;
+    final userId = int.parse(rawUserId.toString());
+
+    // 1. GỌI API THẬT TỪ BACKEND
+    return _reportService.getProductivityReport(userId);
+
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: bgColor,
-      // 1. TOP APP BAR
-      appBar: AppBar(
-        backgroundColor: Colors.white.withOpacity(0.8),
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, size: 20, color: Colors.black),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text("DIGITAL CURATOR",
-                style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey, letterSpacing: 1.5)),
-            Text("Báo cáo năng suất",
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: primaryColor)),
-          ],
-        ),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.settings_outlined, color: primaryColor),
-            onPressed: () {},
-          )
-        ],
-      ),
+      appBar: _buildAppBar(),
+      // DÙNG FUTUREBUILDER ĐỂ QUẢN LÝ DỮ LIỆU ĐỘNG
+      body: FutureBuilder<Map<String, dynamic>?>(
+        future: _reportFuture,
+        builder: (context, snapshot) {
+          // 1. Trạng thái đang tải dữ liệu (Loading)
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
 
-      body: SingleChildScrollView(
-        physics: const BouncingScrollPhysics(),
-        padding: const EdgeInsets.symmetric(horizontal: 24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 24),
+          // 2. Trạng thái lỗi mạng hoặc không có dữ liệu
+          if (snapshot.hasError || snapshot.data == null) {
+            return const Center(child: Text("Không thể tải báo cáo. Vui lòng thử lại!"));
+          }
 
-            // 2. SUMMARY BENTO GRID
-            Row(
-              children: [
-                Expanded(child: _buildKeyStatCard("Tỷ lệ hoàn thành", "85%", "+12% vs t.trước", Icons.analytics)),
-                const SizedBox(width: 12),
-                Expanded(child: _buildKeyStatCard("Tăng trưởng", "10%", "Tuần này", Icons.trending_up, isGrowth: true)),
-              ],
+          // 3. Đã có dữ liệu thành công -> Lấy data ra bóc tách
+          final data = snapshot.data!;
+          final chartData = data['chart_data'] as Map<String, dynamic>;
+
+          return RefreshIndicator(
+            onRefresh: () async {
+              setState(() {
+                _reportFuture = _initReportData(); // Luật ngầm: Pull-to-refresh force reload
+              });
+            },
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 20),
+                  _buildSummaryCards(data), // Truyền data vào
+                  const SizedBox(height: 40),
+
+                  _buildChartHeader(),
+                  const SizedBox(height: 16),
+
+                  _buildBarChart(chartData), // Truyền dữ liệu biểu đồ vào
+                  const SizedBox(height: 24),
+
+                  _buildBottomSection(data), // Truyền dữ liệu thói quen & AI
+                  const SizedBox(height: 40),
+                ],
+              ),
             ),
+          );
+        },
+      ),
+    );
+  }
 
-            const SizedBox(height: 32),
+  // --- CÁC HÀM UI ĐÃ ĐƯỢC ĐỘNG HÓA DỮ LIỆU ---
 
-            // 3. BAR CHART VISUALIZATION
-            _buildSectionHeader("Công việc hoàn thành", "Thống kê 7 ngày gần nhất"),
-            const SizedBox(height: 16),
-            _buildBarChart(),
-
-            const SizedBox(height: 32),
-
-            // 4. HABITS & AI INSIGHT
-            Row(
+  Widget _buildSummaryCards(Map<String, dynamic> data) {
+    return Row(
+      children: [
+        // THẺ 1: TỶ LỆ HOÀN THÀNH (Đã xóa nhãn so sánh với tuần trước)
+        Expanded(
+          child: Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20)),
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(flex: 2, child: _buildHabitProgressCircle()),
-                const SizedBox(width: 16),
-                Expanded(flex: 3, child: _buildAIInsightCard()),
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(color: primaryColor.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
+                  child: Icon(Icons.bar_chart, color: primaryColor, size: 20),
+                ),
+                const SizedBox(height: 16),
+                const Text("Tỷ lệ hoàn thành", style: TextStyle(color: Colors.grey, fontSize: 12)),
+                const SizedBox(height: 4),
+                Text("${data['completion_rate']}%", style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w900)),
               ],
             ),
-
-            const SizedBox(height: 32),
-
-            // 5. RECENT ACTIVITY
-            const Text("Hoạt động tiêu biểu", style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
-            const SizedBox(height: 16),
-            _buildActivityItem("Hôm nay", "Hoàn thành dự án UI/UX", "Vượt tiến độ 2 ngày"),
-            _buildActivityItem("Thứ 3", "Họp chiến lược Quý 4", "Hoàn thành mục tiêu"),
-            _buildActivityItem("Thứ 2", "Nghiên cứu thị trường", "Đã lưu trữ 12 tài liệu", opacity: 0.6),
-
-            const SizedBox(height: 120),
-          ],
-        ),
-      ),
-
-      // 6. BOTTOM NAV
-      bottomNavigationBar: _buildBottomNav(context),
-    );
-  }
-
-  // --- WIDGET HELPERS ---
-
-  Widget _buildKeyStatCard(String label, String value, String trend, IconData icon, {bool isGrowth = false}) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: surfaceColor,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10)],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Icon(icon, color: primaryColor, size: 24),
-              if (!isGrowth) Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(color: Colors.orange.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
-                child: Text(trend, style: const TextStyle(color: Colors.orange, fontSize: 8, fontWeight: FontWeight.bold)),
-              ),
-            ],
           ),
-          const SizedBox(height: 16),
-          Text(label, style: const TextStyle(fontSize: 12, color: Colors.grey, fontWeight: FontWeight.w500)),
-          Text(value, style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w900, letterSpacing: -1)),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSectionHeader(String title, String sub) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
-            Text(sub, style: const TextStyle(fontSize: 12, color: Colors.grey)),
-          ],
         ),
-        const Text("CHI TIẾT", style: TextStyle(color: Colors.indigo, fontSize: 10, fontWeight: FontWeight.bold)),
+        const SizedBox(width: 16),
+        // THẺ 2: TĂNG TRƯỞNG
+        Expanded(
+          child: Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20)),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(color: Colors.blue.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
+                  child: const Icon(Icons.trending_up, color: Colors.blue, size: 20),
+                ),
+                const SizedBox(height: 16),
+                const Text("Tăng trưởng", style: TextStyle(color: Colors.grey, fontSize: 12)),
+                const SizedBox(height: 4),
+                Text("${data['growth_rate']}%", style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w900)),
+              ],
+            ),
+          ),
+        ),
       ],
     );
   }
 
-  Widget _buildBarChart() {
-    final List<double> values = [0.4, 0.65, 0.9, 0.55, 0.75, 0.3, 0.45];
-    final List<String> days = ["T2", "T3", "T4", "T5", "T6", "T7", "CN"];
+  Widget _buildBarChart(Map<String, dynamic> chartData) {
+    double maxVal = 0;
+    String maxDay = "";
+    chartData.forEach((key, value) {
+      if ((value as num).toDouble() > maxVal) {
+        maxVal = value.toDouble();
+        maxDay = key;
+      }
+    });
 
     return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(color: const Color(0xFFEEF1F3).withOpacity(0.5), borderRadius: BorderRadius.circular(20)),
       height: 200,
+      // 1. SỬA LỖI TRÀN: Giảm padding 2 bên từ 16 xuống 8
+      padding: const EdgeInsets.only(top: 24, bottom: 16, left: 8, right: 8),
+      decoration: BoxDecoration(color: const Color(0xFFEDF1F5), borderRadius: BorderRadius.circular(24)),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: List.generate(7, (i) => Column(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            Container(
-              width: 30,
-              height: 120 * values[i],
+        // crossAxisAlignment: CrossAxisAlignment.end,
+        children: chartData.entries.map((entry) {
+          // 2. CHỐNG TRÀN TUYỆT ĐỐI: Bọc từng cột vào Expanded để nó tự chia đều không gian
+          return Expanded(
+            child: _buildBar(
+                entry.key, // <-- TÊN CỦA CỘT (T2, T3, CN...) CHÍNH LÀ Ở ĐÂY
+                (entry.value as num).toDouble(),
+                entry.key == maxDay
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+
+  // Hàm vẽ từng cột (đã tối ưu lại kích thước)
+  Widget _buildBar(String label, double heightFactor, bool isActive) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.end,
+      children: [
+        Flexible(
+          child: FractionallySizedBox(
+            heightFactor: heightFactor,
+            child: Container(
+              // 3. SỬA LỖI TRÀN: Giảm bề ngang cột từ 32 xuống 24 để vừa với màn hình nhỏ
+              width: 24,
               decoration: BoxDecoration(
-                color: values[i] > 0.8 ? primaryColor : primaryColor.withOpacity(0.2),
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(6)),
+                color: isActive ? primaryColor : primaryColor.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(6),
               ),
             ),
-            const SizedBox(height: 8),
-            Text(days[i], style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey)),
-          ],
-        )),
-      ),
-    );
-  }
-
-  Widget _buildHabitProgressCircle() {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(color: surfaceColor, borderRadius: BorderRadius.circular(20)),
-      child: Column(
-        children: [
-          const Text("Thói quen", style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey)),
-          const SizedBox(height: 16),
-          Stack(
-            alignment: Alignment.center,
-            children: [
-              SizedBox(width: 80, height: 80, child: CircularProgressIndicator(value: 0.72, strokeWidth: 8, backgroundColor: bgColor, valueColor: AlwaysStoppedAnimation(tertiaryColor))),
-              const Text("72%", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-            ],
           ),
-          const SizedBox(height: 12),
-          const Text("Duy trì", style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Colors.grey)),
-        ],
-      ),
+        ),
+        const SizedBox(height: 12),
+        // HIỂN THỊ TÊN CỘT: Dữ liệu API trả về "T2", "T3" sẽ được in ra ở dòng Text này
+        Text(label, style: TextStyle(color: Colors.grey[600], fontSize: 12, fontWeight: FontWeight.w500)),
+      ],
     );
   }
 
-  Widget _buildAIInsightCard() {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: surfaceColor.withOpacity(0.7),
-        borderRadius: BorderRadius.circular(20),
-        border: Border(left: BorderSide(color: primaryColor, width: 4)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(children: [Icon(Icons.auto_awesome, color: primaryColor, size: 16), const SizedBox(width: 8), const Text("Gợi ý từ Curator", style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Color(0xFF4647D3)))]),
-          const SizedBox(height: 8),
-          const Text("Tối ưu hóa thời gian sáng", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-          const SizedBox(height: 4),
-          const Text("Bạn tập trung tốt nhất trước 10:00 sáng. Hãy tận dụng nhé!", style: TextStyle(fontSize: 11, color: Colors.black54)),
-        ],
-      ),
+  Widget _buildBottomSection(Map<String, dynamic> data) {
+    double habitValue = (data['habit_rate'] as num).toDouble() / 100; // Đổi về hệ số 0.0 -> 1.0
+
+    return Row(
+      children: [
+        Expanded(
+          flex: 4,
+          child: Container(
+            height: 180,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(24)),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Text("Thói quen", style: TextStyle(color: Colors.grey, fontSize: 12, fontWeight: FontWeight.w600)),
+                const SizedBox(height: 10),
+                SizedBox(
+                  width: 80,
+                  height: 80,
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      CircularProgressIndicator(
+                        value: habitValue,
+                        strokeWidth: 8,
+                        backgroundColor: Colors.grey[200],
+                        color: const Color(0xFF9A6E24),
+                      ),
+                      Center(
+                        child: Text("${data['habit_rate']}%", style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+                const Text("Duy trì", style: TextStyle(color: Colors.grey, fontSize: 12)),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          flex: 6,
+          child: Container(
+            height: 180,
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: primaryColor.withOpacity(0.5), width: 1.5),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.auto_awesome, color: primaryColor, size: 16),
+                    const SizedBox(width: 8),
+                    Text("Gợi ý từ Curator", style: TextStyle(color: primaryColor, fontSize: 12, fontWeight: FontWeight.bold)),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Text(data['ai_suggestion_title'], style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, height: 1.3)),
+                const SizedBox(height: 1),
+                Text(
+                  data['ai_suggestion_content'],
+                  style: TextStyle(color: Colors.grey[600], fontSize: 12, height: 1.5),
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 
-  Widget _buildActivityItem(String day, String title, String sub, {double opacity = 1.0}) {
-    return Opacity(
-      opacity: opacity,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(color: surfaceColor, borderRadius: BorderRadius.circular(16)),
-        child: Row(
+  // --- Các hàm UI giữ nguyên ---
+  PreferredSizeWidget _buildAppBar() => AppBar(/* ... Giữ nguyên như bài trước ... */);
+  Widget _buildChartHeader() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            SizedBox(width: 60, child: Text(day, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.grey))),
-            Container(width: 1, height: 24, color: Colors.grey.withOpacity(0.2)),
-            const SizedBox(width: 16),
-            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)), Text(sub, style: const TextStyle(fontSize: 11, color: Colors.grey))])),
-            Icon(Icons.check_circle, color: primaryColor, size: 20),
+            const Text("Công việc hoàn thành", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 4),
+            Text("Thống kê 7 ngày gần nhất", style: TextStyle(fontSize: 12, color: Colors.grey)),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildBottomNav(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.only(top: 15, bottom: 35),
-      decoration: const BoxDecoration(color: Colors.white, borderRadius: BorderRadius.vertical(top: Radius.circular(45))),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _buildNavItem(context, Icons.home_outlined, "Home", false, route: '/dashboard'),
-          _buildNavItem(context, Icons.check_circle_outline, "Tasks", false, route: '/tasks'),
-          _buildNavItem(context, Icons.repeat, "Habits", false, route: '/habits'),
-          _buildNavItem(context, Icons.auto_awesome_outlined, "AI", false, route: '/ai'),
-          _buildNavItem(context, Icons.person, "Profile", true, route: '/profile'),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildNavItem(BuildContext context, IconData icon, String label, bool isActive, {String? route}) {
-    return InkWell(
-      onTap: () { if (route != null) Navigator.pushNamed(context, route); },
-      child: Column(mainAxisSize: MainAxisSize.min, children: [Icon(icon, color: isActive ? primaryColor : Colors.grey[400], size: 28), const SizedBox(height: 4), Text(label, style: TextStyle(color: isActive ? primaryColor : Colors.grey[400], fontSize: 10, fontWeight: FontWeight.bold))]),
+        Text("CHI TIẾT", style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: primaryColor)),
+      ],
     );
   }
 }

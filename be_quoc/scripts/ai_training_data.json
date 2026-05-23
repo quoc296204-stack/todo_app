@@ -1,0 +1,623 @@
+{
+  "examples": [
+    {
+<<<<<<< HEAD
+      "keywords": ["đồ án", "luận văn", "tốt nghiệp", "khóa luận", "tiểu luận", "bài tập lớn"],
+      "title": "Làm đồ án / Luận văn",
+      "description": "Nhiệm vụ học thuật quy mô lớn, cần tập trung cao độ.",
+      "category": "Học tập",
+      "is_large_task": true,
+      "subtasks": [
+        "Phân tích yêu cầu đề tài & Thu thập tài liệu tham khảo",
+        "Thiết kế cấu trúc và lên dàn ý chi tiết",
+        "Triển khai nội dung cốt lõi / Code chức năng",
+        "Đi in ấn, đóng bìa mạ vàng và xin chữ ký Giảng viên"
+      ]
+    },
+    {
+      "keywords": ["ôn thi", "thi cuối kỳ", "kiểm tra", "học bài", "giải đề", "học tiếng anh", "từ vựng"],
+      "title": "Học tập / Ôn thi",
+      "description": "Nâng cao kiến thức và chuẩn bị cho các bài kiểm tra.",
+      "category": "Học tập",
+      "is_large_task": false,
+      "subtasks": []
+    },
+    {
+      "keywords": ["báo cáo", "thuyết trình", "slide", "powerpoint", "pitching", "tổng kết"],
+      "title": "Chuẩn bị Báo cáo / Thuyết trình",
+      "description": "Biên soạn tài liệu và thiết kế slide thuyết trình.",
+      "category": "Công việc",
+      "is_large_task": true,
+      "subtasks": [
+        "Thu thập số liệu và chốt dàn ý nội dung",
+        "Thiết kế hình ảnh và dàn trang Slide",
+        "Tập thuyết trình thử (Mock Presentation)",
+        "Kiểm tra lại máy chiếu và thiết bị kết nối"
+      ]
+    },
+    {
+      "keywords": ["code", "fix bug", "lập trình", "deploy", "api", "database", "sửa lỗi", "commit"],
+      "title": "Lập trình / Phát triển phần mềm",
+      "description": "Thực thi các tác vụ liên quan đến kỹ thuật và mã nguồn.",
+      "category": "Công việc",
+      "is_large_task": true,
+      "subtasks": [
+        "Đọc hiểu log lỗi hoặc tài liệu API",
+        "Tiến hành viết code và chạy test cục bộ",
+        "Commit code và đẩy lên môi trường nhánh",
+        "Deploy và kiểm tra trên môi trường thực tế"
+      ]
+    },
+    {
+      "keywords": ["họp", "meeting", "gặp mặt", "phỏng vấn", "thảo luận", "bàn bạc", "gọi khách hàng", "check mail"],
+      "title": "Giao tiếp Công việc",
+      "description": "Tương tác và trao đổi thông tin với đối tác, đồng nghiệp.",
+      "category": "Công việc",
+      "is_large_task": false,
+      "subtasks": []
+    },
+    {
+      "keywords": ["tập gym", "chạy bộ", "thể dục", "yoga", "workout", "đá bóng", "cầu lông", "bơi", "tennis"],
+      "title": "Tập luyện thể thao",
+      "description": "Hoạt động rèn luyện thể chất.",
+      "category": "Sức khỏe",
+      "is_large_task": false,
+      "subtasks": []
+    },
+    {
+      "keywords": ["khám bệnh", "nha khoa", "uống thuốc", "bệnh viện", "bác sĩ", "nhổ răng", "lấy máu"],
+      "title": "Chăm sóc Y tế",
+      "description": "Kiểm tra và duy trì tình trạng sức khỏe.",
+      "category": "Sức khỏe",
+      "is_large_task": true,
+      "subtasks": [
+        "Chuẩn bị sổ khám bệnh và giấy tờ tùy thân (CCCD/BHYT)",
+        "Đến cơ sở y tế lấy số thứ tự",
+        "Thực hiện các xét nghiệm cần thiết",
+        "Mua thuốc theo đơn của bác sĩ"
+      ]
+    },
+    {
+      "keywords": ["dọn nhà", "quét nhà", "lau nhà", "giặt giũ", "vệ sinh", "rửa bát", "đổ rác", "hút bụi"],
+      "title": "Dọn dẹp nhà cửa",
+      "description": "Giữ gìn không gian sống sạch sẽ, ngăn nắp.",
+      "category": "Gia đình",
+      "is_large_task": true,
+      "subtasks": [
+        "Phân loại và gom đồ mang đi giặt",
+        "Quét dọn, hút bụi và lau sạch sàn nhà",
+        "Vệ sinh khu vực bếp và phòng tắm",
+        "Đổ rác và thay túi rác mới"
+      ]
+    },
+    {
+      "keywords": ["nấu ăn", "nấu cơm", "chuẩn bị bữa tối", "làm bánh"],
+      "title": "Nấu nướng / Bếp núc",
+      "description": "Chuẩn bị bữa ăn cho bản thân và gia đình.",
+      "category": "Gia đình",
+      "is_large_task": false,
+      "subtasks": []
+    },
+    {
+      "keywords": ["đón con", "cho chó ăn", "dắt chó", "tắm cho mèo", "chăm con"],
+      "title": "Chăm sóc gia đình / Thú cưng",
+      "description": "Dành thời gian chăm lo cho người thân và vật nuôi.",
+      "category": "Gia đình",
+      "is_large_task": false,
+      "subtasks": []
+    },
+    {
+      "keywords": ["đi siêu thị", "mua sắm", "shopping", "mua đồ ăn", "đi chợ"],
+      "title": "Đi siêu thị / Mua sắm",
+      "description": "Mua nhu yếu phẩm cần thiết.",
+      "category": "Cá nhân",
+      "is_large_task": true,
+      "subtasks": [
+        "Kiểm tra tủ lạnh và ghi danh sách đồ cần mua",
+        "Mua thực phẩm tươi sống (Rau, thịt, cá)",
+        "Mua đồ khô và gia vị",
+        "Phân loại và cất đồ vào tủ lạnh khi về nhà"
+      ]
+    },
+    {
+      "keywords": ["xe máy", "bảo dưỡng", "thay nhớt", "rửa xe", "đổ xăng", "sửa xe", "bơm lốp"],
+      "title": "Bảo dưỡng phương tiện",
+      "description": "Chăm sóc và bảo trì phương tiện di chuyển cá nhân.",
+      "category": "Cá nhân",
+      "is_large_task": false,
+      "subtasks": []
+    },
+    {
+      "keywords": ["du lịch", "đặt vé", "khách sạn", "pack đồ", "chuẩn bị hành lý", "sân bay", "chuyến bay"],
+      "title": "Chuẩn bị chuyến đi",
+      "description": "Lên kế hoạch di chuyển và lưu trú.",
+      "category": "Cá nhân",
+      "is_large_task": true,
+      "subtasks": [
+        "Chốt ngày giờ, đặt vé máy bay/xe và khách sạn",
+        "Lên danh sách vật dụng cá nhân cần mang",
+        "Xếp quần áo và đồ đạc vào vali",
+        "Kiểm tra lại giấy tờ tùy thân (CCCD/Hộ chiếu)"
+      ]
+    },
+    {
+      "keywords": ["trả tiền", "thanh toán", "hóa đơn", "đóng tiền", "chuyển khoản", "tiền điện", "tiền nước", "tiền mạng"],
+      "title": "Thanh toán Hóa đơn",
+      "description": "Xử lý các khoản chi phí và giao dịch cá nhân.",
+      "category": "Tài chính",
+      "is_large_task": false,
+      "subtasks": []
+    },
+    {
+      "keywords": ["đi chơi", "cà phê", "nhậu", "hẹn hò", "sinh nhật", "đám cưới", "party", "tiệc", "liên hoan"],
+      "title": "Tham gia Sự kiện Xã hội",
+      "description": "Hoạt động giao lưu, giải trí và duy trì các mối quan hệ.",
+      "category": "Xã hội",
+      "is_large_task": false,
+      "subtasks": []
+    },
+    {
+      "keywords": ["ăn cơm", "uống nước", "ngủ", "nghỉ ngơi", "xem phim", "chơi game"],
+      "title": "Sinh hoạt / Giải trí",
+      "description": "Nhu cầu sinh hoạt thường ngày.",
+      "category": "Cá nhân",
+      "is_large_task": false,
+      "subtasks": []
+=======
+      "keywords": ["đồ án", "bài tập lớn", "nộp đồ án", "lập trình", "báo cáo đồ án", "làm đồ án"],
+      "title": "Hoàn Thiện Đồ Án Tốt Nghiệp",
+      "description": "Tiến hành rà soát lỗi mã nguồn hệ thống, xuất file báo cáo định dạng PDF và nộp đúng hạn.",
+      "category": "Học tập",
+      "is_large_task": true
+    },
+    {
+      "keywords": ["báo cáo", "slide", "thuyết trình", "làm slide", "powerpoint", "ppt"],
+      "title": "Chuẩn Bị Slide Báo Cáo",
+      "description": "Thu thập số liệu thực tế, tổng hợp nội dung chương mục và vẽ biểu đồ biểu diễn trực quan.",
+      "category": "Học tập",
+      "is_large_task": true
+    },
+    {
+      "keywords": ["mua đồ ăn", "đi siêu thị", "mua mì tôm", "mua rau", "tạp hóa", "vinmart"],
+      "title": "Mua Sắm Nhu Yếu Phẩm",
+      "description": "Di chuyển ra cửa hàng tiện lợi gần nhất để mua thực phẩm cung cấp năng lượng cho tuần làm việc.",
+      "category": "Nhà cửa",
+      "is_large_task": false
+    },
+    {
+      "keywords": ["uống thuốc", "vitamin", "uống nước", "uống kháng sinh", "uống viên sủi"],
+      "title": "Bổ Sung Thực Phẩm Chức Năng",
+      "description": "Duy trì thói quen uống vitamin/thuốc đúng giờ theo chỉ định để bảo vệ sức khỏe thể trạng.",
+      "category": "Sức khỏe",
+      "is_large_task": false
+    },
+    {
+      "keywords": ["ôn thi", "học bài", "cày cuốc", "học kỳ", "thi giữa kỳ", "thi cuối kỳ", "kiểm tra"],
+      "title": "Ôn Tập Kiến Thức Luyện Thi",
+      "description": "Hệ thống lại toàn bộ slide bài giảng, làm đề cương chi tiết và giải các bộ đề thi thử năm trước.",
+      "category": "Học tập",
+      "is_large_task": true
+    },
+    {
+      "keywords": ["chạy bộ", "thể dục", "jogging", "cardio", "đi bộ", "ra công viên"],
+      "title": "Luyện Tập Thể Dục Buổi Sáng",
+      "description": "Thực hiện bài tập khởi động toàn thân và chạy bộ duy trì nhịp tim để tăng cường sức bền.",
+      "category": "Sức khỏe",
+      "is_large_task": false
+    },
+    {
+      "keywords": ["dọn phòng", "lau nhà", "quét nhà", "vệ sinh phòng", "giặt đồ", "dọn dẹp"],
+      "title": "Tổng Vệ Sinh Không Gian Sống",
+      "description": "Sắp xếp lại bàn học, quét lau sàn nhà, phân loại rác và giặt giũ chăn màn sạch sẽ.",
+      "category": "Nhà cửa",
+      "is_large_task": true
+    },
+    {
+      "keywords": ["đọc sách", "đọc truyện", "kindle", "sách chuyên ngành", "nghiền ngẫm"],
+      "title": "Phát Triển Tư Duy Qua Việc Đọc Sách",
+      "description": "Dành thời gian tập trung đọc ít nhất 10-15 trang sách và ghi chú lại các từ khóa cốt lõi.",
+      "category": "Phát triển bản thân",
+      "is_large_task": false
+    },
+    {
+      "keywords": ["đi làm", "checkin", "lên công ty", "văn phòng", "vào ca", "đến cơ quan"],
+      "title": "Thực Hiện Nhiệm Vụ Công Việc Công Ty",
+      "description": "Hoàn thành các đầu việc được giao trong ngày, kiểm tra hòm thư điện tử và cập nhật trạng thái tiến độ.",
+      "category": "Công việc",
+      "is_large_task": true
+    },
+    {
+      "keywords": ["họp nhóm", "meeting", "gặp mentor", "họp lab", "brainstorm", "thảo luận"],
+      "title": "Họp Triển Khai Kế Hoạch Nhóm",
+      "description": "Thống nhất ý tưởng, phân chia công việc cụ thể cho từng thành viên và chốt thời hạn hoàn thành.",
+      "category": "Công việc",
+      "is_large_task": true
+    },
+    {
+      "keywords": ["đăng ký tín chỉ", "dky tc", "chọn môn", "lịch học", "đăng ký học phần"],
+      "title": "Xây Dựng Thời Khóa Biểu Học Kỳ Mới",
+      "description": "Nghiên cứu danh sách môn học, chuẩn bị cổng mạng và chọn khung giờ học tối ưu trên hệ thống.",
+      "category": "Học tập",
+      "is_large_task": false
+    },
+    {
+      "keywords": ["đóng tiền phòng", "tiền điện", "tiền nước", "thanh toán hóa đơn", "đóng tiền mạng"],
+      "title": "Thanh Toán Các Chi Phí Định Kỳ",
+      "description": "Kiểm tra số liệu hóa đơn tiêu thụ, chuyển khoản ngân hàng để duy trì các dịch vụ sinh hoạt.",
+      "category": "Tài chính",
+      "is_large_task": false
+    },
+    {
+      "keywords": ["học tiếng anh", "toeic", "ielts", "vocabulary", "nghe tin tức", "học từ mới"],
+      "title": "Trau Dồi Năng Lực Ngoại Ngữ",
+      "description": "Luyện nghe bài hội thoại ngắn, làm bài tập ngữ pháp và ghi nhớ ít nhất 5 từ vựng mới.",
+      "category": "Phát triển bản thân",
+      "is_large_task": false
+    },
+    {
+      "keywords": ["sửa xe", "thay dầu", "bảo dưỡng xe", "rửa xe", "bơm lốp"],
+      "title": "Kiểm Tra Và Bảo Dưỡng Phương Tiện",
+      "description": "Mang phương tiện ra tiệm để kỹ thuật viên kiểm tra phanh, thay dầu máy đảm bảo an toàn giao thông.",
+      "category": "Cá nhân",
+      "is_large_task": false
+    },
+    {
+      "keywords": ["nấu ăn", "làm cơm", "chuẩn bị bữa tối", "nấu bữa trưa", "vào bếp"],
+      "title": "Chuẩn Bị Bữa Ăn Dinh Dưỡng",
+      "description": "Sơ chế nguyên liệu sạch, chế biến món ăn cân bằng dưỡng chất cho bản thân và gia đình.",
+      "category": "Nhà cửa",
+      "is_large_task": false
+    },
+    {
+      "keywords": ["đi gym", "tập tạ", "fitness", "workout", "đẩy ngực", "squat"],
+      "title": "Rèn Luyện Thể Hình Tại Phòng Tập",
+      "description": "Thực hiện chuỗi bài tập kháng lực theo lịch trình phân chia nhóm cơ để cải thiện vóc dáng.",
+      "category": "Sức khỏe",
+      "is_large_task": false
+    },
+    {
+      "keywords": ["gọi về cho mẹ", "gọi cho bố", "facetime gia đình", "gọi về nhà"],
+      "title": "Kết Nối Và Chia Sẻ Với Gia Đình",
+      "description": "Dành thời gian trò chuyện, hỏi thăm sức khỏe đấng sinh thành và cập nhật tình hình cuộc sống.",
+      "category": "Cá nhân",
+      "is_large_task": false
+    },
+    {
+      "keywords": ["thiết kế", "figma", "design ui", "vẽ wireframe", "làm mockup"],
+      "title": "Thiết Kế Giao Diện Trải Nghiệm Người Dùng",
+      "description": "Nghiên cứu hành vi người dùng, vẽ luồng màn hình chi tiết và xuất bản bản mẫu tương tác trên Figma.",
+      "category": "Công việc",
+      "is_large_task": true
+    },
+    {
+      "keywords": ["ngủ sớm", "đi ngủ", "sleep", "đắp chăn ngủ", "tắt máy tính đi ngủ"],
+      "title": "Duy Trì Giấc Ngủ Khỏe Mạnh",
+      "description": "Tắt toàn bộ thiết bị điện tử trước 30 phút, thả lỏng cơ thể để chìm vào giấc ngủ sâu đúng giờ.",
+      "category": "Sức khỏe",
+      "is_large_task": false
+    },
+    {
+      "keywords": ["viết blog", "nhật ký", "journaling", "viết bài", "confession"],
+      "title": "Đúc Kết Suy Nghĩ Qua Câu Chữ",
+      "description": "Ghi lại những trải nghiệm, bài học rút ra trong ngày hoặc biên tập nội dung kiến thức chia sẻ.",
+      "category": "Phát triển bản thân",
+      "is_large_task": false
+    },
+    {
+      "keywords": ["lập lịch tuần", "lên kế hoạch", "set up schedule", "todo list tuần mới"],
+      "title": "Hoạch Định Kế Hoạch Mục Tiêu Tuần",
+      "description": "Rà soát lại các mục tiêu chưa hoàn thành, phân bổ thời gian cho các dự án trọng điểm tuần tới.",
+      "category": "Quản lý",
+      "is_large_task": true
+    },
+    {
+      "keywords": ["sao lưu dữ liệu", "backup", "git push", "commit code", "đồng bộ drive"],
+      "title": "Bảo Mật Và Lưu Trữ Thông Tin Hệ Thống",
+      "description": "Đẩy mã nguồn lên kho lưu trữ đám mây, sao lưu các tài liệu quan trọng tránh mất mát tài nguyên.",
+      "category": "Công việc",
+      "is_large_task": false
+    },
+    {
+      "keywords": ["khám sức khỏe", "đi nha sĩ", "lấy cao răng", "khám mắt", "cắt kính"],
+      "title": "Kiểm Tra Sức Khỏe Định Kỳ",
+      "description": "Đến cơ sở y tế uy tín để tiến hành tầm soát các chỉ số cơ thể hoặc xử lý các vấn đề bệnh lý.",
+      "category": "Sức khỏe",
+      "is_large_task": true
+    },
+    {
+      "keywords": ["gia hạn netflix", "mua spotify", "đóng tiền icloud", "subcription"],
+      "title": "Quản Lý Các Gói Dịch Vụ Giải Trí",
+      "description": "Kiểm tra tình trạng số dư tài khoản, thực hiện gia hạn các nền tảng công nghệ phục vụ đời sống.",
+      "category": "Tài chính",
+      "is_large_task": false
+    },
+    {
+      "keywords": ["học code flutter", "làm app", "học dart", "widget flutter", "state management"],
+      "title": "Nghiên Cứu Lập Trình Ứng Dụng Di Động",
+      "description": "Xây dựng các Widget tùy biến nâng cao, thực hành quản lý trạng thái luồng dữ liệu sạch.",
+      "category": "Học tập",
+      "is_large_task": true
+    },
+    {
+      "keywords": ["tưới cây", "chăm hoa", "quét ban công", "cho cá ăn", "chăm thú cưng"],
+      "title": "Chăm Sóc Không Gian Xanh Cảnh Quan",
+      "description": "Cung cấp nước, tỉa lá úa cho cây cối và bổ sung thức ăn đầy đủ cho vật nuôi trong nhà.",
+      "category": "Nhà cửa",
+      "is_large_task": false
+    },
+    {
+      "keywords": ["nhổ cỏ", "bón phân", "thay chậu cây", "trồng rau ban công"],
+      "title": "Cải Tạo Vườn Cây Cảnh Nhỏ",
+      "description": "Tiến hành làm đất, bổ sung dinh dưỡng hữu cơ và chuyển các cây con sang chậu lớn hơn.",
+      "category": "Nhà cửa",
+      "is_large_task": true
+    },
+    {
+      "keywords": ["sửa bóng đèn", "sửa ống nước", "bảo trì điện", "thay ổ cắm", "thay vòi hoa sen"],
+      "title": "Sửa Chữa Hạ Tầng Kỹ Thuật Nhà Ở",
+      "description": "Ngắt nguồn điện/nước tổng, tiến hành tháo lắp cấu kiện hỏng bằng công cụ chuyên dụng.",
+      "category": "Nhà cửa",
+      "is_large_task": true
+    },
+    {
+      "keywords": ["vệ sinh tủ lạnh", "rã đông tủ lạnh", "lau lò vi sóng", "vệ sinh bếp ga"],
+      "title": "Làm Sạch Thiết Bị Nhà Bếp Cốt Lõi",
+      "description": "Phân loại bỏ thực phẩm hết hạn, dùng dung dịch chuyên dụng lau sạch mảng bám vi khuẩn bên trong.",
+      "category": "Nhà cửa",
+      "is_large_task": true
+    },
+    {
+      "keywords": ["giặt rèm cửa", "giặt thảm", "hút bụi đệm", "phơi chăn bông"],
+      "title": "Vệ Sinh Các Vật Dụng Vải Quy Mô Lớn",
+      "description": "Tháo dỡ các tấm rèm, thảm trải sàn đem giặt sấy ở chế độ công suất cao để khử khuẩn bụi mịn.",
+      "category": "Nhà cửa",
+      "is_large_task": true
+    },
+    {
+      "keywords": ["đăng ký thẻ ngân hàng", "làm thẻ visa", "mở tài khoản", "đổi mã pin e-banking"],
+      "title": "Cấu Hình Thủ Tục Tiện Ích Tài Chính",
+      "description": "Di chuyển ra quầy giao dịch để hoàn thiện hồ sơ định danh, kích hoạt các phương thức bảo mật.",
+      "category": "Tài chính",
+      "is_large_task": false
+    },
+    {
+      "keywords": ["lập sổ chi tiêu", "thống kê tài chính", "tính tiền quỹ", "báo cáo thu chi"],
+      "title": "Kiểm Toán Dòng Tiền Cá Nhân",
+      "description": "Tổng hợp toàn bộ hóa đơn, đối soát hạn mức chi tiêu thực tế so với kế hoạch ngân sách đặt ra.",
+      "category": "Tài chính",
+      "is_large_task": true
+    },
+    {
+      "keywords": ["mua bảo hiểm", "đóng bảo hiểm y tế", "bhyt", "bảo hiểm xe máy"],
+      "title": "Gia Hạn Các Chứng Chỉ Bảo Hộ Rủi Ro",
+      "description": "Nộp các khoản phí theo quy định pháp luật để duy trì quyền lợi khám chữa bệnh và bảo hiểm.",
+      "category": "Tài chính",
+      "is_large_task": false
+    },
+    {
+      "keywords": ["trả nợ", "chuyển tiền vay", "tất toán thẻ tín dụng", "thanh toán trả góp"],
+      "title": "Giải Quyết Khối Nghĩa Vụ Công Nợ",
+      "description": "Trích xuất quỹ tài chính thanh toán các khoản vay đúng kỳ hạn nhằm duy trì điểm tín nhiệm.",
+      "category": "Tài chính",
+      "is_large_task": false
+    },
+    {
+      "keywords": ["tìm hiểu chứng khoán", "đầu tư quỹ mở", "mua vàng", "phân tích thị trường"],
+      "title": "Nghiên Cứu Kênh Tích Sản Tài Sản",
+      "description": "Đọc báo cáo vĩ mô, theo dõi biến động biểu đồ giá để đưa ra quyết định phân bổ vốn an toàn.",
+      "category": "Tài chính",
+      "is_large_task": true
+    },
+    {
+      "keywords": ["kiểm tra test case", "viết testcase", "uạt", "test bug", "fix lỗi front-end"],
+      "title": "Kiểm Thử Đảm Bảo Chất Lượng Phần Mềm",
+      "description": "Xây dựng kịch bản kiểm thử, chạy thử nghiệm hệ thống và ghi nhận các lỗi crash phát sinh.",
+      "category": "Công việc",
+      "is_large_task": true
+    },
+    {
+      "keywords": ["gửi báo cáo tuần", "viết report tuần", "gửi mail cho sếp", "báo cáo kpi"],
+      "title": "Tổng Hợp Kết Quả Vận Hành Tuần",
+      "description": "Trích xuất số liệu từ hệ thống, viết tóm tắt đánh giá hiệu suất và gửi email đúng biểu mẫu.",
+      "category": "Công việc",
+      "is_large_task": false
+    },
+    {
+      "keywords": ["phỏng vấn thử", "mock interview", "sửa cv", "cập nhật linkedin", "rải cv"],
+      "title": "Chuẩn Bị Chiến Lịch Tìm Kiếm Việc Làm",
+      "description": "Tối ưu hóa hồ sơ năng lực cá nhân, thực hành trả lời các câu hỏi tình huống chuyên ngành.",
+      "category": "Công việc",
+      "is_large_task": true
+    },
+    {
+      "keywords": ["setup bàn làm việc", "dọn desktop", "vệ sinh bàn phím", "vệ sinh máy tính pc"],
+      "title": "Tối Ưu Không Gian Làm Việc Công Nghệ",
+      "description": "Đi dây cáp gọn gàng, dùng cồn chuyên dụng lau sạch màn hình, bàn phím để tăng cảm hứng làm việc.",
+      "category": "Công việc",
+      "is_large_task": false
+    },
+    {
+      "keywords": ["ký hợp đồng", "gặp đối tác", "ký kết biên bản", "thương thảo giá"],
+      "title": "Tiến Hành Thủ Tục Giao Dịch Nghiệp Vụ",
+      "description": "Rà soát kỹ lưỡng các điều khoản pháp lý, ký kết xác nhận cam kết hợp tác song phương.",
+      "category": "Công việc",
+      "is_large_task": false
+    },
+    {
+      "keywords": ["học từ vựng tiếng trung", "hsk", "viết chữ hán", "luyện nghe tiếng nhật", "jlpt"],
+      "title": "Nâng Cao Trình Độ Ngôn Ngữ Đông Á",
+      "description": "Thực hành tập viết các bộ thủ cơ bản, nghe audio bài giảng và làm bài test ngữ pháp.",
+      "category": "Phát triển bản thân",
+      "is_large_task": false
+    },
+    {
+      "keywords": ["thiền định", "meditation", "tập thở", "yoga tĩnh tâm"],
+      "title": "Thực Hành Thanh Lọc Tâm Trí Cục Bộ",
+      "description": "Lựa chọn không gian yên tĩnh, tập trung vào hơi thở sâu trong 15 phút để giảm căng thẳng hệ thần kinh.",
+      "category": "Sức khỏe",
+      "is_large_task": false
+    },
+    {
+      "keywords": ["xem khoá học udemy", "học coursera", "xem youtube lập trình", "học chuyên ngành"],
+      "title": "Bồi Dưỡng Kiến Thức Nền Tảng Chuyên Sâu",
+      "description": "Theo dõi các video bài giảng chất lượng cao, thực hành gõ mã nguồn mẫu theo giảng viên.",
+      "category": "Phát triển bản thân",
+      "is_large_task": true
+    },
+    {
+      "keywords": ["nghe podcast", "podcast tư duy", "spotify insight"],
+      "title": "Tiếp Thu Tri Thức Qua Định Dạng Âm Thanh",
+      "description": "Lắng nghe các bài phân tích chuyên sâu từ chuyên gia về chủ đề tâm lý, quản lý thời gian.",
+      "category": "Phát triển bản thân",
+      "is_large_task": false
+    },
+    {
+      "keywords": ["luyện thuyết trình", "tập nói trước gương", "luyện giọng nói"],
+      "title": "Rèn Luyện Kỹ Năng Giao Tiếp Trước Đám Đông",
+      "description": "Chuẩn bị một chủ đề ngắn, thực hành nói kiểm soát tốc độ, ngôn ngữ cơ thể và ngữ điệu.",
+      "category": "Phát triển bản thân",
+      "is_large_task": false
+    },
+    {
+      "keywords": ["đi hiến máu", "thiện nguyện", "tình nguyện viện", "quyên góp đồ cũ"],
+      "title": "Tham Gia Hoạt Động Cộng Đồng Nhân Văn",
+      "description": "Đảm bảo các chỉ số sức khỏe, di chuyển đến điểm tiếp nhận để hỗ trợ công tác cộng đồng.",
+      "category": "Cá nhân",
+      "is_large_task": true
+    },
+    {
+      "keywords": ["cắt tóc", "mua quần áo", "skincare", "gội đầu dưỡng sinh"],
+      "title": "Chăm Sóc Diện Mạo Ngoại Hình Cá Nhân",
+      "description": "Thực hiện các bước vệ sinh cá nhân, thay đổi kiểu tóc gọn gàng để duy trì hình ảnh lịch sự.",
+      "category": "Cá nhân",
+      "is_large_task": false
+    },
+    {
+      "keywords": ["gia hạn hộ chiếu", "làm căn cước", "cccd", "làm lại bằng lái xe"],
+      "title": "Hoàn Thiện Thủ Tục Hành Chính Pháp Lý",
+      "description": "Chuẩn bị hồ sơ giấy tờ, ảnh chân dung và đến cơ quan quản lý nhà nước để nộp thủ tục.",
+      "category": "Cá nhân",
+      "is_large_task": true
+    },
+    {
+      "keywords": ["đi xem phim", "chơi game", "gặp bạn bè", "cà phê chém gió", "đi nhậu"],
+      "title": "Tái Tạo Năng Lượng Bằng Hoạt Động Giải Trí",
+      "description": "Thư giãn đầu óc cùng bạn bè, thiết lập các mối quan hệ xã hội lành mạnh ngoài giờ làm việc.",
+      "category": "Cá nhân",
+      "is_large_task": false
+    },
+    {
+      "keywords": ["lên kế hoạch du lịch", "đặt vé máy bay", "book phòng khách sạn", "chuẩn bị vali"],
+      "title": "Hoạch Định Lộ Trình Chuyến Đi Xa",
+      "description": "Khảo sát địa điểm, tính toán chi phí dự kiến, đặt trước các dịch vụ di chuyển và lưu trú.",
+      "category": "Cá nhân",
+      "is_large_task": true
+    },
+    {
+      "keywords": ["học máy học", "machine learning", "python ai", "train model", "học toán logic"],
+      "title": "Nghiên Cứu Lĩnh Vực Trí Tuệ Nhân Tạo",
+      "description": "Cài đặt các thư viện toán học, xây dựng kiến trúc mạng nơ-ron và xử lý tập dữ liệu thô.",
+      "category": "Học tập",
+      "is_large_task": true
+    },
+    {
+      "keywords": ["viết khóa luận", "nghiên cứu khoa học", "nckh", "tìm tài liệu tham khảo"],
+      "title": "Triển Khai Đề Tài Nghiên Cứu Khoa Học",
+      "description": "Đọc các bài báo quốc tế (Scopus/ISI), tổng hợp tổng quan tình hình và viết nội dung chương mở đầu.",
+      "category": "Học tập",
+      "is_large_task": true
+    },
+    {
+      "keywords": ["học sql", "truy vấn database", "viết câu lệnh select", "tối ưu query", "index sql"],
+      "title": "Luyện Tập Quản Trị Cơ Sở Dữ Liệu SQL",
+      "description": "Thực hành các câu lệnh kết nối bảng (JOIN), nhóm dữ liệu (GROUP BY) và viết hàm điều kiện nâng cao.",
+      "category": "Học tập",
+      "is_large_task": false
+    },
+    {
+      "keywords": ["thay màng lọc máy lọc nước", "vệ sinh máy giặt", "bảo dưỡng điều hòa", "bơm ga điều hòa"],
+      "title": "Bảo Trì Định Kỳ Thiết Bị Gia Dụng Điện Tử",
+      "description": "Liên hệ thợ kỹ thuật hoặc tự tháo gỡ các tấm lọc bụi, làm sạch cặn bẩn để tăng hiệu suất máy.",
+      "category": "Nhà cửa",
+      "is_large_task": true
+    },
+    {
+      "keywords": ["soạn đồ cũ", "thanh lý quần áo", "gom sách báo cũ", "bán ve chai"],
+      "title": "Tối Giản Hóa Đồ Đạc Không Gian Sống",
+      "description": "Phân loại các vật dụng không còn nhu cầu sử dụng, mang đi quyên góp từ thiện hoặc bán tái chế.",
+      "category": "Nhà cửa",
+      "is_large_task": false
+    },
+    {
+      "keywords": ["mua bảo hiểm nhân thọ", "đăng ký mã số thuế", "mst", "quyết toán thuế thu nhập"],
+      "title": "Thực Hiện Nghĩa Vụ Thuế Và Bảo Hộ Tài Chính",
+      "description": "Khai báo thông tin thu nhập trên hệ thống của Tổng cục Thuế, hoàn thiện hồ sơ hoàn thuế.",
+      "category": "Tài chính",
+      "is_large_task": true
+    },
+    {
+      "keywords": ["mở sổ tiết kiệm", "gửi tiền heo đất", "trích quỹ dự phòng"],
+      "title": "Trích Lập Quỹ Dự Phòng Khẩn Cấp",
+      "description": "Chuyển thẳng một phần thu nhập cố định vào tài khoản tiết kiệm dài hạn ngay khi nhận lương.",
+      "category": "Tài chính",
+      "is_large_task": false
+    },
+    {
+      "keywords": ["viết tài liệu api", "swagger", "document backend", "vẽ sơ đồ sequence"],
+      "title": "Tài Liệu Hóa Cấu Trúc Hệ Thống Kỹ Thuật",
+      "description": "Mô tả chi tiết các Endpoint, tham số đầu vào đầu ra dữ liệu JSON để đội phát triển dễ dàng tích hợp.",
+      "category": "Công việc",
+      "is_large_task": true
+    },
+    {
+      "keywords": ["đóng gói docker", "build image", "deploy server", "cấu hình nginx", "vps"],
+      "title": "Triển Khai Ứng Dụng Lên Hạ Tầng Máy Chủ",
+      "description": "Viết Dockerfile hoàn chỉnh, cấu hình Reverse Proxy bằng Nginx và trỏ tên miền về địa chỉ IP server.",
+      "category": "Công việc",
+      "is_large_task": true
+    },
+    {
+      "keywords": ["nghe nhạc lofi", "thư giãn đầu óc", "đắp mặt nạ", "xông tinh dầu phòng ngủ"],
+      "title": "Hồi Phục Thần Kinh Sau Giờ Làm Việc",
+      "description": "Kích hoạt máy khuếch tán tinh dầu, tắt bớt đèn phòng và lắng nghe âm thanh tần số thấp để giải tỏa áp lực.",
+      "category": "Sức khỏe",
+      "is_large_task": false
+    },
+    {
+      "keywords": ["đạp xe", "đạp xe bờ hồ", "cycling"],
+      "title": "Rèn Luyện Khớp Gối Bằng Hoạt Động Đạp Xe",
+      "description": "Duy trì tốc độ đạp ổn định, điều hòa nhịp thở sâu để cải thiện hệ thống tim mạch thể trạng.",
+      "category": "Sức khỏe",
+      "is_large_task": false
+    },
+    {
+      "keywords": ["học kỹ năng excel", "vlookup", "pivot table", "lập macro excel"],
+      "title": "Nâng Cao Kỹ Năng Xử Lý Số Liệu Bằng Excel",
+      "description": "Thực hành các hàm thống kê phức tạp, ứng dụng công cụ lọc dữ liệu để tạo báo cáo trực quan.",
+      "category": "Phát triển bản thân",
+      "is_large_task": false
+    },
+    {
+      "keywords": ["học gõ bàn phím 10 ngón", "typing test", "luyện tốc độ gõ phím"],
+      "title": "Tối Ưu Tốc Độ Thao Tác Bàn Phím Cơ Học",
+      "description": "Đặt tay đúng vị trí quy chuẩn, thực hành các bài khóa luyện phím mà không cần nhìn xuống thiết bị.",
+      "category": "Phát triển bản thân",
+      "is_large_task": false
+    },
+    {
+      "keywords": ["đổi mật khẩu", "bảo mật 2 lớp", "2fa", "thay pass wifi"],
+      "title": "Nâng Cấp An Ninh Tài Khoản Kỹ Thuật Số",
+      "description": "Sử dụng chuỗi ký tự phức tạp bao gồm chữ hoa, chữ thường, số, ký tự đặc biệt và kích hoạt mã OTP.",
+      "category": "Cá nhân",
+      "is_large_task": false
+    },
+    {
+      "keywords": ["đi bảo hành điện thoại", "ép kính iphone", "thay pin laptop", "vệ sinh sấy máy"],
+      "title": "Sửa Chữa Và Phục Hồi Thiết Bị Công Nghệ",
+      "description": "Mang máy đến trung tâm dịch vụ ủy quyền, kiểm tra lỗi phần cứng và ký biên bản giao nhận.",
+      "category": "Cá nhân",
+      "is_large_task": false
+>>>>>>> 5a52b32830a0b79c1c954ac0fc05703032e6414a
+    }
+  ]
+}

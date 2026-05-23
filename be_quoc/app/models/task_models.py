@@ -1,7 +1,8 @@
 from sqlalchemy import Column, Integer, String, Text, DateTime, Boolean, ForeignKey
-from sqlalchemy.dialects.mysql import BIGINT  # Dùng kiểu bigint unsigned đồng bộ hệ thống
+from sqlalchemy.dialects.mysql import BIGINT  
 from sqlalchemy.sql import func
 from app.db.database import Base
+from sqlalchemy.orm import relationship
 
 class Category(Base):
     __tablename__ = "categories"
@@ -32,6 +33,7 @@ class Task(Base):
     # Quản lý trạng thái hoàn thành công việc
     is_completed = Column(Boolean, default=False, nullable=False)
     completed_at = Column(DateTime, nullable=True) 
+    subtasks = relationship("SubTask", back_populates="task", cascade="all, delete-orphan")
 
 
 class SubTask(Base):
@@ -40,9 +42,14 @@ class SubTask(Base):
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     
-    # Đã bổ sung import ForeignKey trên đầu file để trị dứt điểm lỗi NameError
-    task_id = Column(Integer, ForeignKey("tasks.id", ondelete="CASCADE"), nullable=False)
+    # ==========================================
+    # ĐÃ SỬA: Ép kiểu BIGINT(unsigned=True) cho khớp với bảng tasks
+    # ==========================================
+    task_id = Column(BIGINT(unsigned=True), ForeignKey("tasks.id", ondelete="CASCADE"), nullable=False)
     
     title = Column(String(255), nullable=False)
     is_completed = Column(Boolean, default=False, nullable=False)
     created_at = Column(DateTime, server_default=func.now())
+    
+    # Liên kết ngược lại với Task
+    task = relationship("Task", back_populates="subtasks")

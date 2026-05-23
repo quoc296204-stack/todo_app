@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../data/models/user_model.dart';
 import '../../../data/services/auth_service.dart';
 
+
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
 
@@ -61,9 +62,10 @@ class _RegisterPageState extends State<RegisterPage> {
         fullName: fullNameController.text.trim(),
         email: emailController.text.trim(),
         password: passwordController.text.trim(),
+        confirmPassword: confirmPasswordController.text.trim(),
       );
 
-      final result = await _authService.register(user.toJson());
+      final result = await _authService.register(user);
 
       if (!mounted) return;
 
@@ -216,7 +218,7 @@ class _RegisterPageState extends State<RegisterPage> {
           children: [
             Text('Tạo tài khoản mới', style: TextStyle(color: textMain, fontSize: 32, fontWeight: FontWeight.w800)),
             const SizedBox(height: 8),
-            Text('Tham gia cùng Digital Curator ngay hôm nay.', style: TextStyle(color: textSub, fontSize: 14)),
+            // Text('Tham gia cùng Digital Curator ngay hôm nay.', style: TextStyle(color: textSub, fontSize: 14)),
             const SizedBox(height: 48),
 
             // 6. Tích hợp các Input với Controller và Validator

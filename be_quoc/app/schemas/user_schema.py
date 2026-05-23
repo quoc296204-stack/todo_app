@@ -6,7 +6,8 @@ class UserCreate(BaseModel):
     full_name: str
     email: EmailStr
     password: str
-    phone_number: Optional[str] = None
+    confirm_password: str
+    # phone_number: Optional[str] = None
 
 class UserLogin(BaseModel):
     # Khớp với _emailController và _passwordController của bạn
@@ -14,12 +15,11 @@ class UserLogin(BaseModel):
     password: str
 
 class UserUpdate(BaseModel):
-    full_name: str
-    email: EmailStr
-    phone_number: Optional[str] = None
-    birthday: Optional[date] = None
-    job_title: Optional[str] = None
+    name: Optional[str] = None
+    phone: Optional[str] = None
+    birthday: Optional[str] = None
     gender: Optional[str] = None
+    job: Optional[str] = None
     bio: Optional[str] = None
 
 class PasswordChange(BaseModel):

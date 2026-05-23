@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import '../../../data/services/habit_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
 
 class HabitPage extends StatefulWidget {
-  const HabitPage({super.key}); // Giữ nguyên định danh cấu trúc của bạn
+  const HabitPage({super.key});
 
   @override
   State<HabitPage> createState() => _HabitPageState();
@@ -15,9 +16,9 @@ class _HabitPageState extends State<HabitPage> {
   final Color surfaceLow = const Color(0xFFEEF1F3);
 
   final HabitService _habitService = HabitService();
-
-  List<dynamic> habits = [];
+  int? currentUserId;
   bool isLoading = true;
+  List<dynamic> habits = [];
   int progressPercentage = 0;
 
   DateTime _selectedDate = DateTime.now();
@@ -26,23 +27,39 @@ class _HabitPageState extends State<HabitPage> {
   @override
   void initState() {
     super.initState();
-    _generateHorizontalCalendar();
-    _loadHabitData();
+    _generateHorizontalCalendar(); // 1. Khởi tạo thanh lịch trước
+    _initData();                   // 2. Lấy ID và tải dữ liệu
   }
 
+  // Khởi tạo 5 ngày gần nhất cho thanh lịch
   void _generateHorizontalCalendar() {
     final today = DateTime.now();
     _weekDays = List.generate(5, (index) => today.add(Duration(days: index - 2)));
   }
 
+  Future<void> _initData() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      currentUserId = prefs.getInt('userId');
+    });
+
+    if (currentUserId != null) {
+      await _loadHabitData();
+    } else {
+      setState(() => isLoading = false);
+    }
+  }
+
   // 🌟 NÂNG CẤP BỌC TRY-CATCH: Chống tuyệt đối việc treo Loading hoặc trắng màn hình
   Future<void> _loadHabitData() async {
-    if (!mounted) return;
+    if (currentUserId == null || !mounted) return; // Bảo vệ hàm
     setState(() => isLoading = true);
 
     try {
       final dateStr = DateFormat('yyyy-MM-dd').format(_selectedDate);
-      final res = await _habitService.getHabitsByDate(1, dateStr); // Gọi dữ liệu User ID = 1
+
+      // ĐÃ THAY SỐ 1 THÀNH currentUserId!
+      final res = await _habitService.getHabitsByDate(currentUserId!, dateStr);
 
       if (res['status'] == 200 && mounted) {
         final List<dynamic> fetchedHabits = res['data'] ?? [];
@@ -59,24 +76,15 @@ class _HabitPageState extends State<HabitPage> {
         if (mounted) setState(() => isLoading = false);
       }
     } catch (e) {
-      // Nếu có lỗi ép kiểu, in ngay ra màn hình debug để xử lý và tắt trạng thái xoay tải
       debugPrint("❌ LỖI PHẦN CỨNG FRONTEND: $e");
       if (mounted) setState(() => isLoading = false);
     }
   }
 
-  // Future<void> _toggleHabit(int habitId) async {
-  //   final dateStr = DateFormat('yyyy-MM-dd').format(_selectedDate);
-  //   final res = await _habitService.toggleHabit(habitId, dateStr);
-  //   if (res['status'] == 200) {
-  //     _loadHabitData();
-  //   }
-  // }
   // 🌟 NÂNG CẤP UX: Đảo trạng thái lập tức trên giao diện, chạy API ngầm dưới nền
   Future<void> _toggleHabit(int habitId) async {
-    // Bước 1: Cập nhật local state ngay lập tức để giao diện phản hồi không độ trễ
+    // Bước 1: Cập nhật local state ngay lập tức
     setState(() {
-      // Duyệt mảng tìm thói quen vừa bấm và đảo trạng thái is_completed
       for (var habit in habits) {
         if (habit['id'] == habitId) {
           habit['is_completed'] = !(habit['is_completed'] == true);
@@ -84,19 +92,18 @@ class _HabitPageState extends State<HabitPage> {
         }
       }
 
-      // Tính toán lại luôn phần trăm mục tiêu ngày để vòng tròn tiến độ nhảy số lập tức
       int total = habits.length;
       int completed = habits.where((h) => h['is_completed'] == true).length;
       progressPercentage = total > 0 ? ((completed / total) * 100).toInt() : 0;
     });
 
-    // Bước 2: Gọi API cập nhật xuống MySQL ở dưới Background (Không gọi lại _loadHabitData() để tránh bị bật Spinner loading)
+    // Bước 2: Gọi API cập nhật xuống MySQL ở dưới Background
     final dateStr = DateFormat('yyyy-MM-dd').format(_selectedDate);
     final res = await _habitService.toggleHabit(habitId, dateStr);
 
-    // Bước 3: Phòng hờ trường hợp hy hữu (lỗi mạng, server sập), nếu API thất bại thì rollback lại dữ liệu chuẩn
+    // Bước 3: Nếu API thất bại thì rollback lại dữ liệu chuẩn
     if (res['status'] != 200) {
-      _loadHabitData(); // Tải lại dữ liệu gốc từ DB để đồng bộ lại giao diện cho chính xác
+      _loadHabitData();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -110,6 +117,11 @@ class _HabitPageState extends State<HabitPage> {
 
   // 🌟 VIẾT THÊM: Hàm hiển thị Dialog tạo thói quen trực tiếp từ điện thoại
   void _showAddHabitDialog() {
+    if (currentUserId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Vui lòng đăng nhập')));
+      return;
+    }
+
     final titleController = TextEditingController();
     final descController = TextEditingController();
 
@@ -131,13 +143,14 @@ class _HabitPageState extends State<HabitPage> {
             onPressed: () async {
               final title = titleController.text.trim();
               if (title.isNotEmpty) {
-                final success = await _habitService.createHabit(1, title, descController.text.trim());
+                // ĐÃ THAY SỐ 1 THÀNH currentUserId!
+                final success = await _habitService.createHabit(currentUserId!, title, descController.text.trim());
                 if (success && mounted) {
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('🎉 Thêm thói quen thành công!'), behavior: SnackBarBehavior.floating),
+                    const SnackBar(content: Text('🎉 Thêm thói quen thành công!'), behavior: SnackBarBehavior.floating, backgroundColor: Colors.green),
                   );
-                  _loadHabitData(); // Tải lại danh sách thói quen mới lập tức
+                  _loadHabitData();
                 }
               }
             },
@@ -151,13 +164,15 @@ class _HabitPageState extends State<HabitPage> {
 
   @override
   Widget build(BuildContext context) {
-    String monthYearStr = DateFormat('THÁNG MM, yyyy').format(_selectedDate).toUpperCase();
+    // String monthYearStr = DateFormat('THÁNG MM, yyyy').format(_selectedDate).toUpperCase();
 
+    // Trong hàm build(), sửa lại dòng này:
+    String monthYearStr = "THÁNG ${_selectedDate.month.toString().padLeft(2, '0')}, ${_selectedDate.year}";
     return Scaffold(
       backgroundColor: bgColor,
       appBar: _buildAppBar(),
       body: RefreshIndicator(
-        onRefresh: _refreshData,
+        onRefresh: () async => await _loadHabitData(),
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -175,7 +190,9 @@ class _HabitPageState extends State<HabitPage> {
               const SizedBox(height: 16),
               _buildCalendarHeader(),
               const SizedBox(height: 32),
-              isLoading
+              currentUserId == null
+                  ? const Center(child: Padding(padding: EdgeInsets.all(20), child: Text("Vui lòng đăng nhập để xem dữ liệu")))
+                  : isLoading
                   ? const Center(child: Padding(padding: EdgeInsets.all(20), child: CircularProgressIndicator()))
                   : _buildHabitList(),
               const SizedBox(height: 24),
@@ -190,24 +207,25 @@ class _HabitPageState extends State<HabitPage> {
     );
   }
 
-  Future<void> _refreshData() async {
-    await _loadHabitData();
-  }
-
   PreferredSizeWidget _buildAppBar() => AppBar(
     backgroundColor: bgColor, elevation: 0,
     automaticallyImplyLeading: false,
-    title: const Text('Digital Curator', style: TextStyle(color: Color(0xFF4647D3), fontWeight: FontWeight.w900, fontSize: 18)),
+    // title: const Text('Digital Curator', style: TextStyle(color: Color(0xFF4647D3), fontWeight: FontWeight.w900, fontSize: 18)),
     centerTitle: true,
-    actions: [IconButton(icon: const Icon(Icons.settings_outlined, color: Colors.grey), onPressed: () {})],
+    // actions: [IconButton(icon: const Icon(Icons.settings_outlined, color: Colors.grey), onPressed: () {})],
   );
 
+  // Thay thế đoạn logic trong hàm _buildCalendarHeader thành:
   Widget _buildCalendarHeader() {
+    final List<String> vietnameseWeekdays = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: _weekDays.map((day) {
         bool isSelected = day.day == _selectedDate.day && day.month == _selectedDate.month;
-        String weekdayStr = DateFormat('E').format(day).replaceFirst('Mon', 'T2').replaceFirst('Tue', 'T3').replaceFirst('Wed', 'T4').replaceFirst('Thu', 'T5').replaceFirst('Fri', 'T6').replaceFirst('Sat', 'T7').replaceFirst('Sun', 'CN');
+
+        // Cách lấy Thứ chuẩn xác theo chỉ mục 0-6 (CN-T7)
+        String weekdayStr = vietnameseWeekdays[day.weekday % 7];
 
         return GestureDetector(
           onTap: () {
@@ -245,7 +263,6 @@ class _HabitPageState extends State<HabitPage> {
     return Column(children: habits.map((h) => _buildHabitItem(habit: h)).toList());
   }
 
-  // 🌟 NÂNG CẤP CHUẨN KIỂU: Đổi sang nhận diện tham số đặt tên {required Map habit} an toàn tuyệt đối
   Widget _buildHabitItem({required Map habit}) {
     bool isDone = habit['is_completed'] == true;
     return Container(
@@ -335,7 +352,6 @@ class _HabitPageState extends State<HabitPage> {
     );
   }
 
-  // 🌟 ĐÃ LIÊN KẾT: Bấm nút "+" sẽ bật ngay cửa sổ nhập thói quen
   Widget _buildFAB() => FloatingActionButton(
     onPressed: _showAddHabitDialog,
     backgroundColor: primaryColor, shape: const CircleBorder(),
