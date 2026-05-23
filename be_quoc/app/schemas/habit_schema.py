@@ -7,8 +7,16 @@ class HabitBase(BaseModel):
     title: str
     subtitle: Optional[str] = ""
 
-class HabitCreate(HabitBase):
+
+class HabitCreate(BaseModel):
     user_id: int
+    title: str
+    subtitle: Optional[str] = None
+
+# THÊM CLASS NÀY VÀO NGAY BÊN DƯỚI
+class HabitUpdate(BaseModel):
+    title: str
+    subtitle: Optional[str] = None
 
 class HabitResponse(BaseModel):
     id: int

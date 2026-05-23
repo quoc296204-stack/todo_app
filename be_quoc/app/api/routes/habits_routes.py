@@ -7,13 +7,10 @@ from pydantic import BaseModel
 from typing import Optional
 # IMPORT THÊM cast và Date từ sqlalchemy
 from sqlalchemy import cast, Date
+from app.schemas.habit_schema import HabitUpdate , HabitCreate
 
 router = APIRouter(prefix="/api/habits", tags=["habits"])
 
-class HabitCreate(BaseModel):
-    user_id: int
-    title: str
-    description: Optional[str] = None
 
 
 # 1. LẤY DANH SÁCH THÓI QUEN THEO NGÀY CHỌN
@@ -99,14 +96,33 @@ def toggle_habit_status(habit_id: int, selected_date: Optional[str] = Query(None
 @router.post("/")
 def create_habit(habit_data: HabitCreate, db: Session = Depends(get_db_connection)):
     try:
-        new_habit = Habit(user_id=habit_data.user_id, title=habit_data.title, description=habit_data.description)
+        new_habit = Habit(user_id=habit_data.user_id, title=habit_data.title, subtitle=habit_data.subtitle)
         db.add(new_habit)
         db.commit()
         return {"status": 201, "message": "Thành công"}
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=str(e))
-
+# sửa thói quen 
+@router.put("/update/{habit_id}")
+def update_habit(habit_id: int, habit_data: HabitUpdate, db: Session = Depends(get_db_connection)):
+    try:
+        # Tìm thói quen theo ID
+        habit = db.query(Habit).filter(Habit.id == habit_id).first()
+        if not habit:
+            raise HTTPException(status_code=404, detail="Không tìm thấy thói quen")
+        
+        # Cập nhật thông tin
+        habit.title = habit_data.title
+        habit.subtitle = habit_data.subtitle
+        
+        # Lưu vào database
+        db.commit()
+        return {"status": 200, "message": "Cập nhật thành công"}
+    except Exception as e:
+        db.rollback()
+        print(f"[LỖI UPDATE HABIT]: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 # 4. XÓA THÓI QUEN
 @router.delete("/{habit_id}")

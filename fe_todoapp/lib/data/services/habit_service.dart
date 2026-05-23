@@ -53,4 +53,35 @@ class HabitService {
       return false;
     }
   }
+  // 4. Xóa thói quen
+  Future<bool> deleteHabit(int habitId) async {
+    try {
+      final response = await http.delete(
+        Uri.parse('${AppConfig.baseUrl}/habits/delete/$habitId'),
+        headers: {"Content-Type": "application/json"},
+      ).timeout(timeout);
+
+      return response.statusCode == 200;
+    } catch (e) {
+      print("Lỗi khi xóa thói quen: $e");
+      return false;
+    }
+  }
+
+  // 5. Cập nhật thói quen
+  Future<bool> updateHabit(int habitId, String title, String description) async {
+    try {
+      final response = await http.put(
+        Uri.parse('${AppConfig.baseUrl}/habits/update/$habitId'),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({"title": title, "description": description}),
+      ).timeout(timeout);
+
+      return response.statusCode == 200;
+    } catch (e) {
+      print("Lỗi khi cập nhật thói quen: $e");
+      return false;
+    }
+  }
+
 }

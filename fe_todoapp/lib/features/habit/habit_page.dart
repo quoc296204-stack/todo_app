@@ -27,11 +27,10 @@ class _HabitPageState extends State<HabitPage> {
   @override
   void initState() {
     super.initState();
-    _generateHorizontalCalendar(); // 1. Khởi tạo thanh lịch trước
-    _initData();                   // 2. Lấy ID và tải dữ liệu
+    _generateHorizontalCalendar();
+    _initData();
   }
 
-  // Khởi tạo 5 ngày gần nhất cho thanh lịch
   void _generateHorizontalCalendar() {
     final today = DateTime.now();
     _weekDays = List.generate(5, (index) => today.add(Duration(days: index - 2)));
@@ -50,20 +49,16 @@ class _HabitPageState extends State<HabitPage> {
     }
   }
 
-  // 🌟 NÂNG CẤP BỌC TRY-CATCH: Chống tuyệt đối việc treo Loading hoặc trắng màn hình
   Future<void> _loadHabitData() async {
-    if (currentUserId == null || !mounted) return; // Bảo vệ hàm
+    if (currentUserId == null || !mounted) return;
     setState(() => isLoading = true);
 
     try {
       final dateStr = DateFormat('yyyy-MM-dd').format(_selectedDate);
-
-      // ĐÃ THAY SỐ 1 THÀNH currentUserId!
       final res = await _habitService.getHabitsByDate(currentUserId!, dateStr);
 
       if (res['status'] == 200 && mounted) {
         final List<dynamic> fetchedHabits = res['data'] ?? [];
-
         int total = fetchedHabits.length;
         int completed = fetchedHabits.where((h) => h['is_completed'] == true).length;
 
@@ -81,9 +76,7 @@ class _HabitPageState extends State<HabitPage> {
     }
   }
 
-  // 🌟 NÂNG CẤP UX: Đảo trạng thái lập tức trên giao diện, chạy API ngầm dưới nền
   Future<void> _toggleHabit(int habitId) async {
-    // Bước 1: Cập nhật local state ngay lập tức
     setState(() {
       for (var habit in habits) {
         if (habit['id'] == habitId) {
@@ -91,17 +84,14 @@ class _HabitPageState extends State<HabitPage> {
           break;
         }
       }
-
       int total = habits.length;
       int completed = habits.where((h) => h['is_completed'] == true).length;
       progressPercentage = total > 0 ? ((completed / total) * 100).toInt() : 0;
     });
 
-    // Bước 2: Gọi API cập nhật xuống MySQL ở dưới Background
     final dateStr = DateFormat('yyyy-MM-dd').format(_selectedDate);
     final res = await _habitService.toggleHabit(habitId, dateStr);
 
-    // Bước 3: Nếu API thất bại thì rollback lại dữ liệu chuẩn
     if (res['status'] != 200) {
       _loadHabitData();
       if (mounted) {
@@ -115,7 +105,6 @@ class _HabitPageState extends State<HabitPage> {
     }
   }
 
-  // 🌟 VIẾT THÊM: Hàm hiển thị Dialog tạo thói quen trực tiếp từ điện thoại
   void _showAddHabitDialog() {
     if (currentUserId == null) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Vui lòng đăng nhập')));
@@ -128,6 +117,7 @@ class _HabitPageState extends State<HabitPage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: const Text("Thói quen mới", style: TextStyle(fontWeight: FontWeight.bold)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -138,12 +128,11 @@ class _HabitPageState extends State<HabitPage> {
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text("Hủy")),
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text("Hủy", style: TextStyle(color: Colors.grey))),
           ElevatedButton(
             onPressed: () async {
               final title = titleController.text.trim();
               if (title.isNotEmpty) {
-                // ĐÃ THAY SỐ 1 THÀNH currentUserId!
                 final success = await _habitService.createHabit(currentUserId!, title, descController.text.trim());
                 if (success && mounted) {
                   Navigator.pop(context);
@@ -162,11 +151,54 @@ class _HabitPageState extends State<HabitPage> {
     );
   }
 
+  // 🌟 MỚI: Hàm hiển thị Dialog sửa thói quen
+  void _showEditHabitDialog(Map habit) {
+    final titleController = TextEditingController(text: habit['title'] ?? '');
+    final descController = TextEditingController(text: habit['description'] ?? '');
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text("Sửa thói quen", style: TextStyle(fontWeight: FontWeight.bold)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(controller: titleController, decoration: const InputDecoration(hintText: "Tên thói quen...")),
+            const SizedBox(height: 8),
+            TextField(controller: descController, decoration: const InputDecoration(hintText: "Mô tả ngắn...")),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text("Hủy", style: TextStyle(color: Colors.grey))),
+          ElevatedButton(
+            onPressed: () async {
+              final title = titleController.text.trim();
+              if (title.isNotEmpty) {
+                final success = await _habitService.updateHabit(habit['id'], title, descController.text.trim());
+                if (success && mounted) {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Đã cập nhật thói quen!'), behavior: SnackBarBehavior.floating),
+                  );
+                  _loadHabitData();
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Lỗi cập nhật thói quen!')),
+                  );
+                }
+              }
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: primaryColor, foregroundColor: Colors.white),
+            child: const Text("Cập nhật"),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    // String monthYearStr = DateFormat('THÁNG MM, yyyy').format(_selectedDate).toUpperCase();
-
-    // Trong hàm build(), sửa lại dòng này:
     String monthYearStr = "THÁNG ${_selectedDate.month.toString().padLeft(2, '0')}, ${_selectedDate.year}";
     return Scaffold(
       backgroundColor: bgColor,
@@ -210,21 +242,15 @@ class _HabitPageState extends State<HabitPage> {
   PreferredSizeWidget _buildAppBar() => AppBar(
     backgroundColor: bgColor, elevation: 0,
     automaticallyImplyLeading: false,
-    // title: const Text('Digital Curator', style: TextStyle(color: Color(0xFF4647D3), fontWeight: FontWeight.w900, fontSize: 18)),
     centerTitle: true,
-    // actions: [IconButton(icon: const Icon(Icons.settings_outlined, color: Colors.grey), onPressed: () {})],
   );
 
-  // Thay thế đoạn logic trong hàm _buildCalendarHeader thành:
   Widget _buildCalendarHeader() {
     final List<String> vietnameseWeekdays = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
-
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: _weekDays.map((day) {
         bool isSelected = day.day == _selectedDate.day && day.month == _selectedDate.month;
-
-        // Cách lấy Thứ chuẩn xác theo chỉ mục 0-6 (CN-T7)
         String weekdayStr = vietnameseWeekdays[day.weekday % 7];
 
         return GestureDetector(
@@ -263,39 +289,110 @@ class _HabitPageState extends State<HabitPage> {
     return Column(children: habits.map((h) => _buildHabitItem(habit: h)).toList());
   }
 
+  // 🌟 MỚI: Bọc item bằng Dismissible và InkWell để vuốt xóa / chạm sửa
   Widget _buildHabitItem({required Map habit}) {
     bool isDone = habit['is_completed'] == true;
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.01), blurRadius: 10)]),
-      child: Row(
-        children: [
-          CircleAvatar(backgroundColor: primaryColor.withOpacity(0.1), radius: 20, child: Icon(Icons.star_rounded, color: primaryColor, size: 20)),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                    habit['title'] ?? "",
-                    style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                        decoration: isDone ? TextDecoration.lineThrough : null,
-                        color: isDone ? Colors.grey : Colors.black87
-                    )
+
+    return Dismissible(
+      key: Key('habit_${habit['id']}'),
+      direction: DismissDirection.endToStart,
+      background: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        decoration: BoxDecoration(
+          color: Colors.red.shade400,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        alignment: Alignment.centerRight,
+        child: const Icon(Icons.delete_outline, color: Colors.white, size: 28),
+      ),
+      confirmDismiss: (direction) async {
+        return await showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              title: const Text("Xóa thói quen", style: TextStyle(fontWeight: FontWeight.bold)),
+              content: const Text("Bạn có chắc chắn muốn xóa thói quen này không?"),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(false),
+                  child: const Text("HỦY", style: TextStyle(color: Colors.grey)),
                 ),
-                if (habit['description'] != null && habit['description'].toString().isNotEmpty)
-                  Padding(padding: const EdgeInsets.only(top: 2), child: Text(habit['description'], style: const TextStyle(color: Colors.grey, fontSize: 12))),
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(true),
+                  child: const Text("XÓA", style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+                ),
+              ],
+            );
+          },
+        );
+      },
+      onDismissed: (direction) async {
+        final success = await _habitService.deleteHabit(habit['id']);
+        if (success) {
+          setState(() {
+            habits.removeWhere((h) => h['id'] == habit['id']);
+            int total = habits.length;
+            int completed = habits.where((h) => h['is_completed'] == true).length;
+            progressPercentage = total > 0 ? ((completed / total) * 100).toInt() : 0;
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Đã xóa thói quen")),
+          );
+        } else {
+          _loadHabitData(); // Load lại nếu lỗi
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Lỗi không thể xóa thói quen!")),
+          );
+        }
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.01), blurRadius: 10)]
+        ),
+        child: InkWell(
+          onTap: () => _showEditHabitDialog(habit), // Chạm vào vùng trắng để Sửa
+          borderRadius: BorderRadius.circular(20),
+          child: Padding(
+            padding: const EdgeInsets.all(14),
+            child: Row(
+              children: [
+                CircleAvatar(backgroundColor: primaryColor.withOpacity(0.1), radius: 20, child: Icon(Icons.star_rounded, color: primaryColor, size: 20)),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                          habit['title'] ?? "",
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                              decoration: isDone ? TextDecoration.lineThrough : null,
+                              color: isDone ? Colors.grey : Colors.black87
+                          )
+                      ),
+                      if (habit['description'] != null && habit['description'].toString().isNotEmpty)
+                        Padding(padding: const EdgeInsets.only(top: 2), child: Text(habit['description'], style: const TextStyle(color: Colors.grey, fontSize: 12))),
+                    ],
+                  ),
+                ),
+                GestureDetector(
+                  onTap: () => _toggleHabit(habit['id']), // Chạm riêng vào icon check để Tick
+                  child: Container(
+                    color: Colors.transparent, // Mở rộng vùng chạm
+                    padding: const EdgeInsets.only(left: 10, top: 5, bottom: 5),
+                    child: Icon(isDone ? Icons.check_circle : Icons.circle_outlined, color: isDone ? Colors.green : Colors.grey[300], size: 28),
+                  ),
+                ),
               ],
             ),
           ),
-          GestureDetector(
-            onTap: () => _toggleHabit(habit['id']),
-            child: Icon(isDone ? Icons.check_circle : Icons.circle_outlined, color: isDone ? Colors.green : Colors.grey[300], size: 28),
-          ),
-        ],
+        ),
       ),
     );
   }

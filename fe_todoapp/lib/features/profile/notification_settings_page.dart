@@ -48,7 +48,7 @@ class NotificationSettingsPage extends StatelessWidget {
             const SizedBox(height: 40),
 
             // 3. NOTIFICATION PREVIEW
-            _buildSectionLabel("Bản xem trước"),
+            // _buildSectionLabel("Bản xem trước"),
             const SizedBox(height: 8),
             _buildAIPreviewCard(),
 
@@ -154,21 +154,21 @@ class NotificationSettingsPage extends StatelessWidget {
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(Icons.auto_awesome, color: primaryColor, size: 20),
-          const SizedBox(width: 16),
-          const Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text("AI GỢI Ý", style: TextStyle(color: Color(0xFF4647D3), fontSize: 10, fontWeight: FontWeight.bold)),
-                SizedBox(height: 4),
-                Text("Bạn nên hoàn thành Đồ án TN trước 14:00 hôm nay.",
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, height: 1.4)),
-              ],
-            ),
-          ),
-        ],
+        // children: [
+        //   Icon(Icons.auto_awesome, color: primaryColor, size: 20),
+        //   const SizedBox(width: 16),
+        //   const Expanded(
+        //     child: Column(
+        //       crossAxisAlignment: CrossAxisAlignment.start,
+        //       children: [
+        //         Text("AI GỢI Ý", style: TextStyle(color: Color(0xFF4647D3), fontSize: 10, fontWeight: FontWeight.bold)),
+        //         SizedBox(height: 4),
+        //         Text("Bạn nên hoàn thành Đồ án TN trước 14:00 hôm nay.",
+        //             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, height: 1.4)),
+        //       ],
+        //     ),
+        //   ),
+        // ],
       ),
     );
   }

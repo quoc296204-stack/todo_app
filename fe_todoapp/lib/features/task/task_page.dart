@@ -193,7 +193,7 @@ class _TaskPageState extends State<TaskPage> with WidgetsBindingObserver {
   PreferredSizeWidget _buildAppBar() => AppBar(
     backgroundColor: bgColor, elevation: 0,
     automaticallyImplyLeading: false,
-    title: Text('Digital Curator', style: TextStyle(color: primaryColor, fontWeight: FontWeight.w900, fontSize: 18)),
+    title: Text(' ', style: TextStyle(color: primaryColor, fontWeight: FontWeight.w900, fontSize: 18)),
     centerTitle: true,
     actions: [
 

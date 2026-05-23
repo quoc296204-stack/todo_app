@@ -151,13 +151,13 @@ class _AiPageState extends State<AiPage> {
         elevation: 0,
         title: Row(
           children: [
-            CircleAvatar(
-              radius: 19,
-              backgroundColor: primaryColor.withOpacity(0.1),
-              child: Icon(Icons.auto_awesome, color: primaryColor, size: 22),
-            ),
-            const SizedBox(width: 12),
-            Text('Digital Curator AI', style: TextStyle(color: primaryColor, fontWeight: FontWeight.w900, fontSize: 18)),
+            // CircleAvatar(
+            //   radius: 19,
+            //   backgroundColor: primaryColor.withOpacity(0.1),
+            //   child: Icon(Icons.auto_awesome, color: primaryColor, size: 22),
+            // ),
+            // const SizedBox(width: 12),
+            // Text(' ', style: TextStyle(color: primaryColor, fontWeight: FontWeight.w900, fontSize: 18)),
           ],
         ),
       ),
@@ -329,7 +329,7 @@ class _AiPageState extends State<AiPage> {
             child: Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(color: primaryColor, shape: BoxShape.circle),
-              child: const Icon(Icons.bolt, color: Colors.white, size: 20),
+              child: const Icon(Icons.send, color: Colors.white, size: 20),
             ),
           ),
         ],
