@@ -1,42 +1,17 @@
 from passlib.context import CryptContext
+from fastapi import HTTPException, status
+from fastapi.security import HTTPBearer
 
-# pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
-# def get_password_hash(password: str):
-#     return pwd_context.hash(password)
-
-# def verify_password(plain_password, hashed_password):
-#     return pwd_context.verify(plain_password, hashed_password)
-
+# 1. Khởi tạo CryptContext cho việc băm mật khẩu
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
+# 2. Các hàm hỗ trợ băm và kiểm tra mật khẩu
 def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
 
 def get_password_hash(password):
     return pwd_context.hash(password)
-from fastapi import Depends, HTTPException, status
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from firebase_admin import auth
 
-# Khởi tạo trạm kiểm soát Bearer Token
+# 3. Cấu hình bảo mật cơ bản (HTTPBearer)
+# Bạn vẫn có thể giữ cái này nếu sau này muốn dùng JWT để xác thực
 security = HTTPBearer()
-
-def verify_firebase_token(creds: HTTPAuthorizationCredentials = Depends(security)):
-    token = creds.credentials
-    try:
-        # Giải mã token bằng Firebase Admin
-        decoded_token = auth.verify_id_token(token)
-        return decoded_token
-    except Exception as e:
-        # DÒNG MỚI: Báo động đỏ ra terminal để biết nguyên nhân thực sự!
-        # DÒNG MỚI: Báo động đỏ ra terminal để biết nguyên nhân thực sự!
-        print(f"\n[LỖI FIREBASE TOKEN]: {e}\n") 
-        print(f"\n[LỖI FIREBASE TOKEN]: {e}\n") 
-        
-        
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Token không hợp lệ hoặc đã hết hạn",
-            headers={"WWW-Authenticate": "Bearer"},
-        )

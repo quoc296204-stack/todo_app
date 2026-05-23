@@ -1,4 +1,4 @@
-import 'dart:async'; // THÊM DÒNG NÀY ĐỂ DÙNG TIMER
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
@@ -38,35 +38,27 @@ class _DashboardPageState extends State<DashboardPage> with WidgetsBindingObserv
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-
     _initData();
-    _startClock(); // Kích hoạt đồng hồ chạy thực tế
+    _startClock();
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    _timeTimer?.cancel(); // Hủy timer tránh rò rỉ bộ nhớ
+    _timeTimer?.cancel();
     super.dispose();
   }
 
-  // --- HÀM CẬP NHẬT ĐỒNG HỒ REAL-TIME ---
   void _startClock() {
-    _updateTime(); // Cập nhật ngay lần đầu tiên mở màn hình
-    // Thiết lập chạy lặp lại sau mỗi 1 phút để cập nhật giờ:phút
+    _updateTime();
     _timeTimer = Timer.periodic(const Duration(minutes: 1), (Timer t) => _updateTime());
   }
 
   void _updateTime() {
     final DateTime now = DateTime.now();
-
-    // 1. Định dạng Giờ : Phút
     final String formattedTime = DateFormat('HH:mm').format(now);
-
-    // 2. Định dạng Ngày / Tháng / Năm
     final String formattedDate = DateFormat('dd/MM/yyyy').format(now);
 
-    // 3. Xử lý chuyển đổi Thứ sang tiếng Việt chuẩn
     String weekdayStr = "";
     switch (now.weekday) {
       case DateTime.monday: weekdayStr = "Thứ Hai"; break;
@@ -90,10 +82,8 @@ class _DashboardPageState extends State<DashboardPage> with WidgetsBindingObserv
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
     if (state == AppLifecycleState.resumed) {
-      _updateTime(); // Cập nhật lại thời gian ngay lập tức khi mở điện thoại lên
-      if (currentUserId != null) {
-        _loadDashboardData();
-      }
+      _updateTime();
+      if (currentUserId != null) _loadDashboardData();
     }
   }
 
@@ -117,7 +107,6 @@ class _DashboardPageState extends State<DashboardPage> with WidgetsBindingObserv
 
     try {
       final dateStr = DateFormat('yyyy-MM-dd').format(DateTime.now());
-
       final results = await Future.wait([
         _taskService.getAllTasks(currentUserId!, filterBy: 'today'),
         _habitService.getHabitsByDate(currentUserId!, dateStr)
@@ -143,16 +132,11 @@ class _DashboardPageState extends State<DashboardPage> with WidgetsBindingObserv
     setState(() {
       for (var task in todayTasks) {
         if (task['id'] == taskId) {
-          if (task['is_completed'] is int) {
-            task['is_completed'] = task['is_completed'] == 1 ? 0 : 1;
-          } else {
-            task['is_completed'] = !(task['is_completed'] == true);
-          }
+          task['is_completed'] = (task['is_completed'] == 1 || task['is_completed'] == true) ? 0 : 1;
           break;
         }
       }
     });
-
     final res = await _taskService.toggleTaskComplete(taskId);
     if (res['status'] != 200) _loadDashboardData();
   }
@@ -166,7 +150,6 @@ class _DashboardPageState extends State<DashboardPage> with WidgetsBindingObserv
         }
       }
     });
-
     final dateStr = DateFormat('yyyy-MM-dd').format(DateTime.now());
     final res = await _habitService.toggleHabit(habitId, dateStr);
     if (res['status'] != 200) _loadDashboardData();
@@ -187,25 +170,19 @@ class _DashboardPageState extends State<DashboardPage> with WidgetsBindingObserv
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildHeader(), // Header chứa thời gian thực tế mới
+                _buildHeader(),
                 const SizedBox(height: 32),
-
                 _buildSectionHeader("Công việc hôm nay", actionText: "TẤT CẢ", onAction: () => Navigator.pushReplacementNamed(context, '/tasks')),
                 const SizedBox(height: 16),
                 isLoading ? const Center(child: CircularProgressIndicator()) : _buildTasksList(),
-
                 const SizedBox(height: 32),
-
                 _buildSectionHeader("Thói quen"),
                 const SizedBox(height: 16),
                 isLoading ? const Center(child: CircularProgressIndicator()) : _buildHabitsList(),
-
                 const SizedBox(height: 32),
-
                 _buildSectionHeader("Đánh giá ngày"),
                 const SizedBox(height: 16),
                 isLoading ? const SizedBox() : _buildCharts(),
-
                 const SizedBox(height: 100),
               ],
             ),
@@ -216,51 +193,25 @@ class _DashboardPageState extends State<DashboardPage> with WidgetsBindingObserv
     );
   }
 
-  // --- CẬP NHẬT GRAPHIC HEADER HIỂN THỊ THỜI GIAN CHUẨN UX ---
   Widget _buildHeader() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                children: [
-                  CircleAvatar(
-                    backgroundColor: primaryColor.withOpacity(0.2),
-                    radius: 20,
-                    child: Icon(Icons.person, color: primaryColor),
-                  ),
-                  const SizedBox(width: 12),
-                  Text(
-                    "Xin chào, $userName!",
-                    style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w900, letterSpacing: -0.5),
-                  ),
-                ],
-              ),
+              Row(children: [
+                CircleAvatar(backgroundColor: primaryColor.withOpacity(0.2), radius: 20, child: Icon(Icons.person, color: primaryColor)),
+                const SizedBox(width: 12),
+                Text("Xin chào, $userName!", style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w900, letterSpacing: -0.5)),
+              ]),
               const SizedBox(height: 8),
-              // Hiển thị dạng: 10:58  •  Thứ Sáu, 22/05/2026 thẳng hàng với tên chào
-              Padding(
-                padding: const EdgeInsets.only(left : 52),
-                child: Text(
-                  "$_timeString   •   $_dateString",
-                  style: TextStyle(
-                      color: Colors.grey[600],
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 0.2
-                  ),
-                ),
-              ),
+              Padding(padding: const EdgeInsets.only(left: 52), child: Text("$_timeString   •   $_dateString", style: TextStyle(color: Colors.grey[600], fontSize: 13, fontWeight: FontWeight.w700))),
             ],
           ),
         ),
-        IconButton(
-          icon: const Icon(Icons.notifications_none, size: 28),
-          onPressed: () {},
-        )
+        IconButton(icon: const Icon(Icons.notifications_none, size: 28), onPressed: () {}),
       ],
     );
   }
@@ -270,19 +221,13 @@ class _DashboardPageState extends State<DashboardPage> with WidgetsBindingObserv
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-        if (actionText != null)
-          GestureDetector(
-            onTap: onAction,
-            child: Text(actionText, style: TextStyle(color: primaryColor, fontSize: 12, fontWeight: FontWeight.bold)),
-          )
+        if (actionText != null) GestureDetector(onTap: onAction, child: Text(actionText, style: TextStyle(color: primaryColor, fontSize: 12, fontWeight: FontWeight.bold))),
       ],
     );
   }
 
   Widget _buildTasksList() {
-    if (todayTasks.isEmpty) {
-      return const Text("Hôm nay bạn không có công việc nào.", style: TextStyle(color: Colors.grey));
-    }
+    if (todayTasks.isEmpty) return const Text("Hôm nay bạn không có công việc nào.", style: TextStyle(color: Colors.grey));
     return Column(
       children: todayTasks.map((task) {
         bool isCompleted = task['is_completed'] == 1 || task['is_completed'] == true;
@@ -294,21 +239,10 @@ class _DashboardPageState extends State<DashboardPage> with WidgetsBindingObserv
             decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
             child: Row(
               children: [
-                Icon(
-                  isCompleted ? Icons.check_circle : Icons.circle_outlined,
-                  color: isCompleted ? Colors.green : primaryColor,
-                  size: 24,
-                ),
+                Icon(isCompleted ? Icons.check_circle : Icons.circle_outlined, color: isCompleted ? Colors.green : primaryColor, size: 24),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: Text(
-                    task['title'] ?? '',
-                    style: TextStyle(
-                      fontSize: 15, fontWeight: FontWeight.bold,
-                      decoration: isCompleted ? TextDecoration.lineThrough : null,
-                      color: isCompleted ? Colors.grey : Colors.black87,
-                    ),
-                  ),
+                  child: Text(task['title'] ?? '', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, decoration: isCompleted ? TextDecoration.lineThrough : null, color: isCompleted ? Colors.grey : Colors.black87)),
                 ),
                 Text(task['deadline'] != null ? task['deadline'].toString().substring(11, 16) : '', style: const TextStyle(color: Colors.grey, fontSize: 12)),
               ],
@@ -320,9 +254,7 @@ class _DashboardPageState extends State<DashboardPage> with WidgetsBindingObserv
   }
 
   Widget _buildHabitsList() {
-    if (todayHabits.isEmpty) {
-      return const Text("Hôm nay bạn chưa thiết lập thói quen nào.", style: TextStyle(color: Colors.grey));
-    }
+    if (todayHabits.isEmpty) return const Text("Hôm nay bạn chưa thiết lập thói quen.", style: TextStyle(color: Colors.grey));
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: Row(
@@ -330,36 +262,15 @@ class _DashboardPageState extends State<DashboardPage> with WidgetsBindingObserv
           bool isDone = habit['is_completed'] == true;
           return GestureDetector(
             onTap: () => _toggleHabit(habit['id']),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 300),
+            child: Container(
               margin: const EdgeInsets.only(right: 12),
               padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 24),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: isDone ? Colors.green : Colors.transparent, width: 2),
-                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10)],
-              ),
-              child: Column(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: isDone ? Colors.green.withOpacity(0.1) : primaryColor.withOpacity(0.1),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      isDone ? Icons.check : Icons.star_rounded,
-                      color: isDone ? Colors.green : primaryColor,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    habit['title'] ?? '',
-                    style: TextStyle(fontWeight: FontWeight.bold, color: isDone ? Colors.green : Colors.black87),
-                  )
-                ],
-              ),
+              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), border: Border.all(color: isDone ? Colors.green : Colors.transparent, width: 2)),
+              child: Column(children: [
+                Icon(isDone ? Icons.check : Icons.star_rounded, color: isDone ? Colors.green : primaryColor),
+                const SizedBox(height: 12),
+                Text(habit['title'] ?? '', style: TextStyle(fontWeight: FontWeight.bold, color: isDone ? Colors.green : Colors.black87))
+              ]),
             ),
           );
         }).toList(),
@@ -368,47 +279,89 @@ class _DashboardPageState extends State<DashboardPage> with WidgetsBindingObserv
   }
 
   Widget _buildCharts() {
+    // --- 1. TÍNH TOÁN TIẾN ĐỘ CÔNG VIỆC ---
     int totalTasks = todayTasks.length;
-    int doneTasks = todayTasks.where((t) => t['is_completed'] == 1 || t['is_completed'] == true).length;
+    int doneTasks = todayTasks.where((t) =>
+    t['is_completed'] == 1 || t['is_completed'] == true).length;
     double taskPercent = totalTasks > 0 ? (doneTasks / totalTasks) : 0;
 
+    // --- 2. TÍNH TOÁN TIẾN ĐỘ THÓI QUEN ---
     int totalHabits = todayHabits.length;
-    int doneHabits = todayHabits.where((h) => h['is_completed'] == true).length;
+    int doneHabits = todayHabits.where((h) =>
+    h['is_completed'] == 1 || h['is_completed'] == true).length;
     double habitPercent = totalHabits > 0 ? (doneHabits / totalHabits) : 0;
 
+    // --- 3. HIỂN THỊ 2 BIỂU ĐỒ NẰM NGANG NHAU ---
     return Row(
       children: [
-        Expanded(child: _buildChartCard("Công việc", taskPercent, doneTasks, totalTasks)),
-        const SizedBox(width: 16),
-        Expanded(child: _buildChartCard("Thói quen", habitPercent, doneHabits, totalHabits)),
+        // Biểu đồ Công việc (Bên trái)
+        Expanded(
+          child: _buildChartCard("Công việc", taskPercent, doneTasks, totalTasks),
+        ),
+
+        const SizedBox(width: 16), // Khoảng cách giữa 2 biểu đồ
+
+        // Biểu đồ Thói quen (Bên phải)
+        Expanded(
+          child: _buildChartCard("Thói quen", habitPercent, doneHabits, totalHabits),
+        ),
       ],
     );
   }
 
   Widget _buildChartCard(String title, double percent, int done, int total) {
     return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(24)),
+      padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+      ),
       child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-          const SizedBox(height: 16),
-          Stack(
-            alignment: Alignment.center,
-            children: [
-              SizedBox(
-                width: 70, height: 70,
-                child: CircularProgressIndicator(
+          // 1. Dùng Stack để lồng chữ vào giữa vòng tròn
+          SizedBox(
+            height: 80, // Chiều cao vòng tròn (bạn có thể tăng giảm tùy ý)
+            width: 80,  // Chiều rộng vòng tròn
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                // Vòng tròn tiến độ
+                CircularProgressIndicator(
                   value: percent,
-                  strokeWidth: 8, backgroundColor: surfaceLow,
-                  valueColor: AlwaysStoppedAnimation<Color>(percent == 1.0 ? Colors.green : primaryColor),
+                  strokeWidth: 8, // Độ dày của viền (mặc định là 4)
+                  backgroundColor: surfaceLow, // Màu viền xám mờ ở dưới
+                  valueColor: AlwaysStoppedAnimation(
+                    percent == 1.0 ? Colors.green : primaryColor,
+                  ),
                 ),
-              ),
-              Text('${(percent * 100).toInt()}%', style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16)),
-            ],
+                // Chữ % nằm ở chính giữa
+                Center(
+                  child: Text(
+                    "${(percent * 100).toInt()}%",
+                    style: const TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w900, // Chữ đậm giống ảnh
+                      color: Colors.black87,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
-          const SizedBox(height: 12),
-          Text("$done / $total hoàn thành", style: const TextStyle(color: Colors.grey, fontSize: 11)),
+
+          const SizedBox(height: 16),
+
+          // 2. Dòng chữ tiêu đề nằm ở dưới (Công việc / Thói quen)
+          Text(
+            title.toUpperCase(), // Chuyển thành in hoa giống chữ "MỤC TIÊU NGÀY"
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 12,
+              color: Colors.grey[600],
+              letterSpacing: 0.5, // Giãn chữ ra một chút cho sang
+            ),
+          ),
         ],
       ),
     );
@@ -420,11 +373,7 @@ class _DashboardPageState extends State<DashboardPage> with WidgetsBindingObserv
     child: Row(
       mainAxisAlignment: MainAxisAlignment.spaceAround,
       children: [
-<<<<<<< HEAD
-        _buildNavItem(Icons.home_outlined, "Home", '/dashboard', isActive: true),
-=======
         _buildNavItem(Icons.home_filled, "Home", '/dashboard', isActive: true),
->>>>>>> 5a52b32830a0b79c1c954ac0fc05703032e6414a
         _buildNavItem(Icons.check_circle_outline, "Tasks", '/tasks'),
         _buildNavItem(Icons.repeat, "Habits", '/habits'),
         _buildNavItem(Icons.auto_awesome_outlined, "AI", '/ai'),
@@ -435,13 +384,6 @@ class _DashboardPageState extends State<DashboardPage> with WidgetsBindingObserv
 
   Widget _buildNavItem(IconData icon, String label, String route, {bool isActive = false}) => GestureDetector(
     onTap: () { if (!isActive) Navigator.pushReplacementNamed(context, route); },
-    child: Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, color: isActive ? primaryColor : Colors.grey[400], size: 24),
-        const SizedBox(height: 4),
-        Text(label, style: TextStyle(color: isActive ? primaryColor : Colors.grey[400], fontSize: 10, fontWeight: FontWeight.bold)),
-      ],
-    ),
+    child: Column(mainAxisSize: MainAxisSize.min, children: [Icon(icon, color: isActive ? primaryColor : Colors.grey[400], size: 24), const SizedBox(height: 4), Text(label, style: TextStyle(color: isActive ? primaryColor : Colors.grey[400], fontSize: 10, fontWeight: FontWeight.bold))]),
   );
 }

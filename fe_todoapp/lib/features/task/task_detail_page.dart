@@ -1,275 +1,6 @@
-<<<<<<< HEAD
-//
-// import 'package:flutter/material.dart';
-// import 'package:intl/intl.dart';
-// import 'package:shared_preferences/shared_preferences.dart'; // THÊM DÒNG NÀY
-// import '../../../data/services/task_service.dart';
-//
-// class TaskDetailPage extends StatefulWidget {
-//   const TaskDetailPage({super.key});
-//
-//   @override
-//   State<TaskDetailPage> createState() => _TaskDetailPageState();
-// }
-//
-// class _TaskDetailPageState extends State<TaskDetailPage> {
-//   // --- HỆ MÀU & STYLE ---
-//   final Color primaryColor = const Color(0xFF4647D3);
-//   final Color bgColor = const Color(0xFFF5F7F9);
-//   final Color textMain = const Color(0xFF2C2F31);
-//
-//   final titleController = TextEditingController();
-//   final descController = TextEditingController();
-//
-//   // DỮ LIỆU ĐỘNG
-//   int? currentUserId; // THÊM BIẾN LƯU USER ID
-//   List<Map<String, dynamic>> dynamicCategories = [];
-//   String selectedCategory = "";
-//   String selectedPriority = "Trung bình";
-//   DateTime startTime = DateTime.now();
-//   DateTime deadline = DateTime.now().add(const Duration(hours: 4));
-//   bool isReminder = true;
-//   bool isLoading = false;
-//
-//   Map? taskToEdit;
-//   final TaskService _taskService = TaskService();
-//
-//   @override
-//   void initState() {
-//     super.initState();
-//     _initData(); // Gọi hàm khởi tạo dữ liệu
-//   }
-//
-//   // Khởi tạo: Lấy UserId trước, sau đó mới tải danh mục
-//   Future<void> _initData() async {
-//     await _loadUserId();
-//     if (currentUserId != null) {
-//       await _loadCategories();
-//     }
-//   }
-//
-//   // Lấy userId từ SharedPreferences
-//   Future<void> _loadUserId() async {
-//     final prefs = await SharedPreferences.getInstance();
-//     setState(() {
-//       currentUserId = prefs.getInt('userId');
-//     });
-//   }
-//
-//   // Hàm tải danh mục từ tài khoản (BE)
-//   Future<void> _loadCategories() async {
-//     if (currentUserId == null) return; // Bảo vệ hàm
-//
-//     // Đã thay thế số 1 bằng currentUserId!
-//     final result = await _taskService.getCategories(currentUserId!);
-//     if (result['status'] == 200 && mounted) {
-//       setState(() {
-//         dynamicCategories = List<Map<String, dynamic>>.from(result['data']);
-//
-//         // Chỉ đặt mặc định nếu không phải đang ở chế độ Sửa và có dữ liệu
-//         if (taskToEdit == null && dynamicCategories.isNotEmpty && selectedCategory.isEmpty) {
-//           selectedCategory = dynamicCategories[0]['name'];
-//         }
-//       });
-//     }
-//   }
-//
-//   @override
-//   void didChangeDependencies() {
-//     super.didChangeDependencies();
-//     final args = ModalRoute.of(context)?.settings.arguments;
-//     if (args != null && args is Map && taskToEdit == null) {
-//       taskToEdit = args;
-//       titleController.text = taskToEdit!['title'] ?? "";
-//       descController.text = taskToEdit!['description'] ?? "";
-//       selectedCategory = taskToEdit!['category'] ?? "";
-//       selectedPriority = taskToEdit!['priority'] ?? "Trung bình";
-//       startTime = DateTime.parse(taskToEdit!['start_time']);
-//       deadline = DateTime.parse(taskToEdit!['deadline']);
-//     }
-//   }
-//
-//   Future<void> _selectDateTime(BuildContext context, bool isStart) async {
-//     final DateTime? d = await showDatePicker(
-//       context: context,
-//       initialDate: isStart ? startTime : deadline,
-//       firstDate: DateTime(2000), lastDate: DateTime(2100),
-//     );
-//     if (d == null) return;
-//
-//     if (!mounted) return;
-//     final TimeOfDay? t = await showTimePicker(
-//       context: context,
-//       initialTime: TimeOfDay.fromDateTime(isStart ? startTime : deadline),
-//     );
-//     if (t == null) return;
-//
-//     setState(() {
-//       final dt = DateTime(d.year, d.month, d.day, t.hour, t.minute);
-//       isStart ? startTime = dt : deadline = dt;
-//     });
-//   }
-//
-//   Future<void> onSaveTask() async {
-//     if (currentUserId == null) {
-//       _showSnackBar("Lỗi: Không tìm thấy tài khoản đăng nhập!", isError: true);
-//       return;
-//     }
-//
-//     if (titleController.text.trim().isEmpty) {
-//       _showSnackBar("Vui lòng nhập tiêu đề", isError: true);
-//       return;
-//     }
-//     if (selectedCategory.isEmpty) {
-//       _showSnackBar("Vui lòng chọn hoặc thêm danh mục trước", isError: true);
-//       return;
-//     }
-//
-//     setState(() => isLoading = true);
-//     final taskData = {
-//       "title": titleController.text.trim(),
-//       "description": descController.text.trim(),
-//       "category": selectedCategory,
-//       "start_time": DateFormat('yyyy-MM-dd HH:mm:ss').format(startTime),
-//       "deadline": DateFormat('yyyy-MM-dd HH:mm:ss').format(deadline),
-//       "priority": selectedPriority,
-//       "is_reminder": isReminder,
-//     };
-//
-//     try {
-//       Map<String, dynamic> result;
-//       if (taskToEdit == null) {
-//         // Đã thay thế số 1 bằng currentUserId!
-//         result = await _taskService.createTask(currentUserId!, taskData);
-//       } else {
-//         result = await _taskService.updateTask(taskToEdit!['id'], taskData);
-//       }
-//
-//       if (!mounted) return;
-//       setState(() => isLoading = false);
-//
-//       if (result['status'] == 201 || result['status'] == 200) {
-//         _showSnackBar("Lưu thành công!", isError: false);
-//         Navigator.pop(context, true);
-//       } else {
-//         _showSnackBar(result['body']?['detail'] ?? "Lỗi lưu dữ liệu");
-//       }
-//     } catch (e) {
-//       if (mounted) {
-//         setState(() => isLoading = false);
-//         _showSnackBar("Lỗi kết nối Server!");
-//       }
-//     }
-//   }
-//
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       backgroundColor: bgColor,
-//       appBar: _buildAppBar(),
-//       body: SingleChildScrollView(
-//         padding: const EdgeInsets.symmetric(horizontal: 24),
-//         child: Column(
-//           crossAxisAlignment: CrossAxisAlignment.start,
-//           children: [
-//             const SizedBox(height: 24),
-//             _buildHeroInput(),
-//             const SizedBox(height: 32),
-//             _buildFormSection(),
-//             const SizedBox(height: 120),
-//           ],
-//         ),
-//       ),
-//       bottomSheet: _buildBottomAction(),
-//     );
-//   }
-//
-//   PreferredSizeWidget _buildAppBar() => AppBar(
-//     backgroundColor: bgColor.withOpacity(0.8), elevation: 0,
-//     title: Text(taskToEdit == null ? "Thêm công việc" : "Chỉnh sửa task", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-//     leading: IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.pop(context)),
-//   );
-//
-//   Widget _buildHeroInput() => Column(
-//     crossAxisAlignment: CrossAxisAlignment.start,
-//     children: [
-//       const Text("TIÊU ĐỀ", style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey, letterSpacing: 1.5)),
-//       TextField(controller: titleController, style: TextStyle(fontSize: 32, fontWeight: FontWeight.w800, color: textMain, letterSpacing: -1), decoration: const InputDecoration(hintText: "Tên công việc...", border: InputBorder.none)),
-//     ],
-//   );
-//
-//   Widget _buildFormSection() => Column(
-//     crossAxisAlignment: CrossAxisAlignment.start,
-//     children: [
-//       _buildLabel("DANH MỤC"),
-//       _buildCategorySelector(),
-//       const SizedBox(height: 32),
-//       _buildLabel("MÔ TẢ CHI TIẾT"),
-//       _buildCard(TextField(controller: descController, maxLines: 4, decoration: const InputDecoration(hintText: "Thêm ghi chú...", border: InputBorder.none))),
-//       const SizedBox(height: 24),
-//       _buildLabel("THỜI GIAN & NHẮC NHỞ"),
-//       _buildCard(Column(children: [
-//         _buildTimeRow("Bắt đầu", startTime, () => _selectDateTime(context, true)),
-//         const Divider(height: 32),
-//         _buildTimeRow("Deadline", deadline, () => _selectDateTime(context, false)),
-//       ])),
-//       const SizedBox(height: 24),
-//       _buildLabel("MỨC ĐỘ ƯU TIÊN"),
-//       _buildPrioritySelector(),
-//     ],
-//   );
-//
-//   Widget _buildCategorySelector() {
-//     if (dynamicCategories.isEmpty) {
-//       return const Text("Chưa có danh mục. Vui lòng thêm ở trang Task.", style: TextStyle(color: Colors.red, fontSize: 12, fontStyle: FontStyle.italic));
-//     }
-//     return Wrap(
-//       spacing: 8,
-//       runSpacing: 8,
-//       children: dynamicCategories.map((cat) => ChoiceChip(
-//         label: Text(cat['name']),
-//         selected: selectedCategory == cat['name'],
-//         onSelected: (val) {
-//           if (val) setState(() => selectedCategory = cat['name']);
-//         },
-//         selectedColor: primaryColor,
-//         backgroundColor: Colors.white,
-//         labelStyle: TextStyle(
-//             color: selectedCategory == cat['name'] ? Colors.white : textMain,
-//             fontSize: 12
-//         ),
-//       )).toList(),
-//     );
-//   }
-//
-//   Widget _buildPrioritySelector() => Container(padding: const EdgeInsets.all(4), decoration: BoxDecoration(color: const Color(0xFFEEF1F3), borderRadius: BorderRadius.circular(99)), child: Row(children: ["Thấp", "Trung bình", "Cao"].map((p) => Expanded(child: GestureDetector(onTap: () => setState(() => selectedPriority = p), child: Container(padding: const EdgeInsets.symmetric(vertical: 12), decoration: BoxDecoration(color: selectedPriority == p ? Colors.white : Colors.transparent, borderRadius: BorderRadius.circular(99)), child: Center(child: Text(p, style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: selectedPriority == p ? primaryColor : Colors.grey))))))).toList()));
-//
-//   Widget _buildBottomAction() => Container(padding: const EdgeInsets.fromLTRB(24, 16, 24, 40), color: bgColor.withOpacity(0.9), child: SizedBox(width: double.infinity, height: 60, child: ElevatedButton(onPressed: isLoading ? null : onSaveTask, style: ElevatedButton.styleFrom(backgroundColor: primaryColor, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30))), child: isLoading ? const CircularProgressIndicator(color: Colors.white) : const Text("Lưu công việc", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)))));
-//
-//   Widget _buildLabel(String text) => Padding(padding: const EdgeInsets.only(left: 4, bottom: 12), child: Text(text, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey, letterSpacing: 1)));
-//   Widget _buildCard(Widget child) => Container(padding: const EdgeInsets.all(16), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)), child: child);
-//   Widget _buildTimeRow(String label, DateTime time, VoidCallback onTap) => InkWell(onTap: onTap, borderRadius: BorderRadius.circular(8), child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [Row(children: [Icon(Icons.access_time, size: 18, color: primaryColor), const SizedBox(width: 12), Text(label, style: const TextStyle(fontWeight: FontWeight.w600))]), Text(DateFormat('dd/MM, HH:mm').format(time), style: TextStyle(color: primaryColor, fontWeight: FontWeight.bold))]));
-//   void _showSnackBar(String msg, {bool isError = true}) { ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg), backgroundColor: isError ? Colors.redAccent : Colors.green, behavior: SnackBarBehavior.floating)); }
-// }
-// //
-// // ```
-// //
-// // **Những thay đổi chính:**
-// //
-// // 1. Thêm import shared_preferences.
-// // 2. Tạo biến currentUserId và hàm _loadUserId() để lấy ID.
-// // 3. Chỉnh sửa lại initState đổi thành gọi _initData() để đợi lấy userId xong mới gọi API _loadCategories().
-// // 4. Trong hàm _loadCategories, gọi _taskService.getCategories(currentUserId!).
-// // 5. Trong hàm onSaveTask(), kiểm tra xem currentUserId có bị null không, nếu không thì truyền currentUserId! vào createTask.
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-=======
-
-import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
-import 'package:shared_preferences/shared_preferences.dart'; // THÊM DÒNG NÀY
->>>>>>> 5a52b32830a0b79c1c954ac0fc05703032e6414a
 import '../../../data/services/task_service.dart';
 
 class TaskDetailPage extends StatefulWidget {
@@ -287,12 +18,7 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
   final titleController = TextEditingController();
   final descController = TextEditingController();
 
-<<<<<<< HEAD
   int? currentUserId;
-=======
-  // DỮ LIỆU ĐỘNG
-  int? currentUserId; // THÊM BIẾN LƯU USER ID
->>>>>>> 5a52b32830a0b79c1c954ac0fc05703032e6414a
   List<Map<String, dynamic>> dynamicCategories = [];
 
   // ==============================================
@@ -313,16 +39,9 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
   @override
   void initState() {
     super.initState();
-<<<<<<< HEAD
     _initData();
   }
 
-=======
-    _initData(); // Gọi hàm khởi tạo dữ liệu
-  }
-
-  // Khởi tạo: Lấy UserId trước, sau đó mới tải danh mục
->>>>>>> 5a52b32830a0b79c1c954ac0fc05703032e6414a
   Future<void> _initData() async {
     await _loadUserId();
     if (currentUserId != null) {
@@ -330,10 +49,6 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
     }
   }
 
-<<<<<<< HEAD
-=======
-  // Lấy userId từ SharedPreferences
->>>>>>> 5a52b32830a0b79c1c954ac0fc05703032e6414a
   Future<void> _loadUserId() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
@@ -342,14 +57,8 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
   }
 
   Future<void> _loadCategories() async {
-<<<<<<< HEAD
     if (currentUserId == null) return;
 
-=======
-    if (currentUserId == null) return; // Bảo vệ hàm
-
-    // Đã thay thế số 1 bằng currentUserId!
->>>>>>> 5a52b32830a0b79c1c954ac0fc05703032e6414a
     final result = await _taskService.getCategories(currentUserId!);
     if (result['status'] == 200 && mounted) {
       setState(() {
@@ -434,10 +143,6 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
     try {
       Map<String, dynamic> result;
       if (taskToEdit == null) {
-<<<<<<< HEAD
-=======
-        // Đã thay thế số 1 bằng currentUserId!
->>>>>>> 5a52b32830a0b79c1c954ac0fc05703032e6414a
         result = await _taskService.createTask(currentUserId!, taskData);
       } else {
         result = await _taskService.updateTask(taskToEdit!['id'], taskData);
@@ -523,7 +228,6 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
     ],
   );
 
-<<<<<<< HEAD
   // ==============================================
   // (MỚI) HÀM VẼ DANH SÁCH VIỆC CON & THANH TIẾN ĐỘ
   // ==============================================
@@ -597,8 +301,6 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
     );
   }
 
-=======
->>>>>>> 5a52b32830a0b79c1c954ac0fc05703032e6414a
   Widget _buildCategorySelector() {
     if (dynamicCategories.isEmpty) {
       return const Text("Chưa có danh mục. Vui lòng thêm ở trang Task.", style: TextStyle(color: Colors.red, fontSize: 12, fontStyle: FontStyle.italic));
@@ -631,13 +333,3 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
   Widget _buildTimeRow(String label, DateTime time, VoidCallback onTap) => InkWell(onTap: onTap, borderRadius: BorderRadius.circular(8), child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [Row(children: [Icon(Icons.access_time, size: 18, color: primaryColor), const SizedBox(width: 12), Text(label, style: const TextStyle(fontWeight: FontWeight.w600))]), Text(DateFormat('dd/MM, HH:mm').format(time), style: TextStyle(color: primaryColor, fontWeight: FontWeight.bold))]));
   void _showSnackBar(String msg, {bool isError = true}) { ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg), backgroundColor: isError ? Colors.redAccent : Colors.green, behavior: SnackBarBehavior.floating)); }
 }
-//
-// ```
-//
-// **Những thay đổi chính:**
-//
-// 1. Thêm import shared_preferences.
-// 2. Tạo biến currentUserId và hàm _loadUserId() để lấy ID.
-// 3. Chỉnh sửa lại initState đổi thành gọi _initData() để đợi lấy userId xong mới gọi API _loadCategories().
-// 4. Trong hàm _loadCategories, gọi _taskService.getCategories(currentUserId!).
-// 5. Trong hàm onSaveTask(), kiểm tra xem currentUserId có bị null không, nếu không thì truyền currentUserId! vào createTask.

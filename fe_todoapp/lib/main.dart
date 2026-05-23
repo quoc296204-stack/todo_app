@@ -55,7 +55,7 @@ class PersonalAiManagerApp extends StatelessWidget {
         '/profile' : (context) => const ProfilePage(),
 
         // Route này dành cho trang chỉnh sửa thông tin[cite: 4, 5]
-        // '/edit_profile' : (context) => const EditProfilePage(),
+        '/edit_profile' : (context) => const EditProfilePage(),
 
         // BẠN CẦN THÊM DÒNG NÀY: Route mới cho trang đổi mật khẩu
         '/change_password' : (context) => const ChangePasswordPage(),

@@ -62,7 +62,7 @@ class _ProductivityReportPageState extends State<ProductivityReportPage> {
 
           // 3. Đã có dữ liệu thành công -> Lấy data ra bóc tách
           final data = snapshot.data!;
-          final chartData = data['chart_data'] as Map<String, dynamic>;
+          final chartData = data['chart_data'] as Map<String, dynamic> ?? {};
 
           return RefreshIndicator(
             onRefresh: () async {
@@ -102,7 +102,6 @@ class _ProductivityReportPageState extends State<ProductivityReportPage> {
   Widget _buildSummaryCards(Map<String, dynamic> data) {
     return Row(
       children: [
-        // THẺ 1: TỶ LỆ HOÀN THÀNH (Đã xóa nhãn so sánh với tuần trước)
         Expanded(
           child: Container(
             padding: const EdgeInsets.all(20),
@@ -118,13 +117,13 @@ class _ProductivityReportPageState extends State<ProductivityReportPage> {
                 const SizedBox(height: 16),
                 const Text("Tỷ lệ hoàn thành", style: TextStyle(color: Colors.grey, fontSize: 12)),
                 const SizedBox(height: 4),
-                Text("${data['completion_rate']}%", style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w900)),
+                // 👉 Đã thêm ?? 0
+                Text("${data['completion_rate'] ?? 0}%", style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w900)),
               ],
             ),
           ),
         ),
         const SizedBox(width: 16),
-        // THẺ 2: TĂNG TRƯỞNG
         Expanded(
           child: Container(
             padding: const EdgeInsets.all(20),
@@ -140,7 +139,8 @@ class _ProductivityReportPageState extends State<ProductivityReportPage> {
                 const SizedBox(height: 16),
                 const Text("Tăng trưởng", style: TextStyle(color: Colors.grey, fontSize: 12)),
                 const SizedBox(height: 4),
-                Text("${data['growth_rate']}%", style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w900)),
+                // 👉 Đã thêm ?? 0
+                Text("${data['growth_rate'] ?? 0}%", style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w900)),
               ],
             ),
           ),
@@ -206,7 +206,9 @@ class _ProductivityReportPageState extends State<ProductivityReportPage> {
   }
 
   Widget _buildBottomSection(Map<String, dynamic> data) {
-    double habitValue = (data['habit_rate'] as num).toDouble() / 100; // Đổi về hệ số 0.0 -> 1.0
+    // 👉 An toàn hóa: Nếu habit_rate bị null, mặc định là 0
+    final habitRate = data['habit_rate'] ?? 0;
+    double habitValue = (habitRate as num).toDouble() / 100;
 
     return Row(
       children: [
@@ -234,7 +236,8 @@ class _ProductivityReportPageState extends State<ProductivityReportPage> {
                         color: const Color(0xFF9A6E24),
                       ),
                       Center(
-                        child: Text("${data['habit_rate']}%", style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                        // 👉 Dùng biến habitRate đã được an toàn hóa
+                        child: Text("$habitRate%", style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
                       ),
                     ],
                   ),
@@ -267,18 +270,22 @@ class _ProductivityReportPageState extends State<ProductivityReportPage> {
                   ],
                 ),
                 const SizedBox(height: 10),
-                Text(data['ai_suggestion_title'], style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, height: 1.3)),
-                const SizedBox(height: 1),
+                // 👉 Đã sửa lỗi: Thêm giá trị chuỗi dự phòng nếu Title bị null
                 Text(
-                  data['ai_suggestion_content'],
+                    data['ai_suggestion_title']?.toString() ?? "Chưa có gợi ý",
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, height: 1.3)
+                ),
+                const SizedBox(height: 4),
+                // 👉 Đã sửa lỗi: Thêm giá trị chuỗi dự phòng nếu Content bị null
+                Text(
+                  data['ai_suggestion_content']?.toString() ?? "Bạn đang làm rất tốt, hãy tiếp tục phát huy nhé!",
                   style: TextStyle(color: Colors.grey[600], fontSize: 12, height: 1.5),
                   maxLines: 3,
                   overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),
-          ),
-        ),
+          ),        ),
       ],
     );
   }
