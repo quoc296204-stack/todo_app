@@ -68,7 +68,9 @@ class _CategoryPageState extends State<CategoryPage> {
     FocusScope.of(context).unfocus();
 
     final result = await _taskService.addCategory(currentUserId!, name);
-    if (result['success'] == true) {
+    print("🚀 Dữ liệu Backend trả về: $result"); // Thêm dòng này
+
+    if (result['status'] == 200 || result['status'] == 201) {
       _categoryController.clear();
       _fetchCategories();
       ScaffoldMessenger.of(context).showSnackBar(
