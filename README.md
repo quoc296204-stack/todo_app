@@ -43,31 +43,35 @@ Một ứng dụng quản lý công việc thông minh, tích hợp trí tuệ n
 
 ## 🚀 Hướng dẫn cài đặt
 
-🛠️ Công cụ yêu cầu: Python (3.9+), Flutter SDK, trình soạn thảo (như VS Code).
-
+🛠️ Công cụ yêu cầu: Python (3.9+), Flutter SDK, dart sdk , mysql , vscode( or pycharm ) androi studio
+🛠️ CSDL liên hệ qua email : quoc296204@gmail.com
+🛠️ Tải repo về 
 ### 1. Khởi chạy Backend (Python/FastAPI)
 Mở Terminal và chạy lần lượt:
 
-Chuyển thư mục: cd be_quoc
-
-Cài thư viện: pip install -r requirements.txt (Khuyến nghị dùng môi trường ảo venv).
-
-Chạy server: uvicorn app.main:app --reload (Chạy ở port 8000).
+1. `cd be_quoc`:vào thư mục back_end
+2. `python -m venv venv` : nơi sẽ chứa các thư viện để chạy be 
+3. `pip install -r requirements.txt` : file text đã chứa danh sách thư viện cần thiết 
+4. `.\venv\Scripts\activate` : kích hoạt thư viện venv
+5. `uvicorn app.main:myapp --host 0.0.0.0 --port 8000 --reload` : kích hoạt uvicorn để chạy
+6. terminal sẽ báo trạng thái thành công là được !
+7. Muốn chắc cú có thể vào swager để check docs#
 
 ### 2. Khởi chạy Frontend (Flutter)
 Mở một Terminal mới và chạy:
 
-Chuyển thư mục: cd fe_todoapp
+1. `cd fe_todoapp` 
+2. `flutter pub get` : cật nhật các thư viện đã liệt kê ở pubspec.yaml
+3. Nhớ chọn môi trườg để chạy nhó 
+4. `flutter run` : chạy nhó hoặc bấm nút run ở trên 
 
-Tải thư viện: flutter pub get
-
-Chạy ứng dụng: flutter run
 
 Mẹo chọn thiết bị: Xem danh sách bằng flutter devices ➔ Chạy đích danh bằng flutter run -d <mã_thiết_bị>.
 
-### 3. Lưu ý khi chạy trên Điện thoại thật (Dùng Ngrok)
-Vấn đề: Điện thoại không thể gọi API qua 127.0.0.1 (localhost) của máy tính.
-Cách xử lý:
+### 3. Lưu ý khi chạy trên Điện thoại thật (Dùng Ngrok) 
+- Dự án này mình dùng thiết bị thật và sử dụng ngrok làm đường hầm 
+- Cấu hình ở file constant.dart( bên fe) 
+- Hướng dẫn sử dụng ngrok: `https://www.youtube.com/watch?v=Cxi3cHpV238`
 
 Chạy lệnh: ngrok http 8000 (để public port của Backend).
 
