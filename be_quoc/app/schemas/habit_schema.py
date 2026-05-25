@@ -2,32 +2,34 @@ from pydantic import BaseModel
 from typing import Optional
 from datetime import datetime
 
+# ĐÃ SỬA: Đổi toàn bộ `subtitle` thành `description` để khớp với DB Model
+
 class HabitBase(BaseModel):
     user_id: int
     title: str
-    subtitle: Optional[str] = ""
+    description: Optional[str] = "" 
 
 
 class HabitCreate(BaseModel):
     user_id: int
     title: str
-    subtitle: Optional[str] = None
+    description: Optional[str] = None
 
-# THÊM CLASS NÀY VÀO NGAY BÊN DƯỚI
+
 class HabitUpdate(BaseModel):
     title: str
-    subtitle: Optional[str] = None
+    description: Optional[str] = None
+
 
 class HabitResponse(BaseModel):
     id: int
     user_id: int
     title: str
-    subtitle: Optional[str] = None
+    description: Optional[str] = None
     created_at: datetime
     
-    # SỬA LỖI TẠI ĐÂY: Thêm giá trị mặc định để tránh lỗi "Field required"
     current_streak: int = 0 
     is_completed_today: bool = False
 
     class Config:
-        from_attributes = True # Cho phép Pydantic đọc dữ liệu từ SQLAlchemy model
+        from_attributes = True

@@ -439,36 +439,30 @@ class _TaskPageState extends State<TaskPage> with WidgetsBindingObserver {
     ),
   );
 
-  // THÊM MỚI: Thanh lọc theo Danh Mục
+  // ĐÃ SỬA: Thanh Danh Mục tĩnh (Chỉ hiển thị, cuộn ngang, không có sự kiện bấm)
   Widget _buildCategoryFilters() {
     if (dynamicCategories.isEmpty) return const SizedBox.shrink();
 
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
+      physics: const BouncingScrollPhysics(), // Thêm dòng này để cuộn mượt mà hơn
       child: Row(
         children: dynamicCategories.map((cat) {
-          bool isSelected = _selectedCategoryId == cat['id'];
-          return GestureDetector(
-            onTap: () {
-              // Bật/tắt chọn danh mục
-              setState(() => _selectedCategoryId = isSelected ? null : cat['id']);
-            },
-            child: Container(
-              margin: const EdgeInsets.only(right: 8),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: BoxDecoration(
-                color: isSelected ? primaryColor.withOpacity(0.1) : Colors.transparent,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: isSelected ? primaryColor : Colors.grey[300]!),
-              ),
-              child: Text(
-                  cat['name'] ?? 'Không tên',
-                  style: TextStyle(
-                      color: isSelected ? primaryColor : Colors.black54,
-                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                      fontSize: 13
-                  )
-              ),
+          return Container(
+            margin: const EdgeInsets.only(right: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              color: Colors.transparent, // Nền trong suốt
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: Colors.grey.shade300), // Viền xám cố định
+            ),
+            child: Text(
+                cat['name'] ?? 'Không tên',
+                style: TextStyle(
+                    color: Colors.grey.shade600, // Chữ xám cố định
+                    fontWeight: FontWeight.w500,
+                    fontSize: 13
+                )
             ),
           );
         }).toList(),

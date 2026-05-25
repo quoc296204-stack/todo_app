@@ -5,19 +5,45 @@ from fastapi import HTTPException
 from app.models.task_models import SubTask, Task, Category
 from app.schemas.task_schema import TaskCreate, CategoryCreate 
 
+# ==================== HÀM HỖ TRỢ XỬ LÝ DANH MỤC ====================
+def _resolve_category_id(db: Session, user_id: int, category_name: str):
+    """
+    Biến đổi tên danh mục (chuỗi) thành category_id (số).
+    Tự động tạo danh mục mới nếu chưa tồn tại.
+    """
+    if not category_name:
+        return None
+        
+    category_name = category_name.strip()
+    category_obj = db.query(Category).filter(
+        Category.name == category_name, 
+        Category.user_id == user_id
+    ).first()
+    
+    if category_obj:
+        return category_obj.id
+        
+    # Tự động tạo mới nếu chưa có
+    new_category = Category(user_id=user_id, name=category_name)
+    db.add(new_category)
+    db.flush() # Nạp vào DB tạm để lấy ID mà chưa cần commit chốt
+    return new_category.id
+
+
 # ==================== CỤM LOGIC CHO CÔNG VIỆC (TASKS) ====================
 
 def create_task(db: Session, user_id: int, task_data: TaskCreate):
-    """
-    Hàm tạo Task đơn giản (không có subtasks). 
-    Nếu muốn dùng Subtasks, hãy dùng hàm create_task_with_subtasks ở dưới.
-    """
     try:
+        # Lấy hoặc tạo category_id chuẩn từ tên gửi lên
+        cat_id = task_data.category_id
+        if not cat_id and task_data.category:
+            cat_id = _resolve_category_id(db, user_id, task_data.category)
+
         new_task = Task(
             user_id=user_id,
             title=task_data.title,
             description=task_data.description,
-            category=task_data.category,
+            category_id=cat_id, # ĐÃ SỬA
             priority=task_data.priority,
             start_time=task_data.start_time,
             deadline=task_data.deadline,
@@ -33,44 +59,53 @@ def create_task(db: Session, user_id: int, task_data: TaskCreate):
         raise HTTPException(status_code=500, detail=f"Lỗi hệ thống: {str(e)}")
 
 def create_task_with_subtasks(db: Session, user_id: int, task_data: TaskCreate):
-    """Hàm tạo Task KÈM Subtasks"""
-    new_task = Task(
-        user_id=user_id,
-        title=task_data.title,
-        description=task_data.description,
-        category=task_data.category,
-        priority=task_data.priority,
-        start_time=task_data.start_time,
-        deadline=task_data.deadline,
-        is_reminder=task_data.is_reminder,
-        is_completed=False
-    )
-    
-    db.add(new_task)
-    db.commit()
-    db.refresh(new_task)
-    
-    # Tạo subtasks nếu có
-    if hasattr(task_data, 'subtasks') and task_data.subtasks:
-        subtask_objects = []
-        for st in task_data.subtasks:
-            new_subtask = SubTask(
-                task_id=new_task.id,
-                title=st.title,
-                is_completed=st.is_checked
-            )
-            subtask_objects.append(new_subtask)
+    try:
+        cat_id = task_data.category_id
+        if not cat_id and task_data.category:
+            cat_id = _resolve_category_id(db, user_id, task_data.category)
+
+        new_task = Task(
+            user_id=user_id,
+            title=task_data.title,
+            description=task_data.description,
+            category_id=cat_id, # ĐÃ SỬA
+            priority=task_data.priority,
+            start_time=task_data.start_time,
+            deadline=task_data.deadline,
+            is_reminder=task_data.is_reminder,
+            is_completed=False
+        )
+        
+        db.add(new_task)
+        db.flush() # Lấy new_task.id để làm khóa ngoại cho subtasks
+        
+        # Tạo subtasks nếu có
+        if hasattr(task_data, 'subtasks') and task_data.subtasks:
+            subtask_objects = []
+            for st in task_data.subtasks:
+                new_subtask = SubTask(
+                    task_id=new_task.id,
+                    title=st.title,
+                    is_completed=st.is_checked if hasattr(st, 'is_checked') else False
+                )
+                subtask_objects.append(new_subtask)
+                
+            db.add_all(subtask_objects)
             
-        db.add_all(subtask_objects)
         db.commit()
         db.refresh(new_task) 
-        
-    return new_task
+        return new_task
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Lỗi hệ thống: {str(e)}")
 
 def get_all_tasks(db: Session, user_id: int, search: str = None, filter_by: str = "all", sort_by: str = "default"):
     try:
-        # CỰC KỲ QUAN TRỌNG: joinedload để nạp mảng subtasks từ DB lên
-        query = db.query(Task).options(joinedload(Task.subtasks)).filter(Task.user_id == user_id)
+        # ĐÃ SỬA: Thêm joinedload(Task.category_info) để lúc query lấy được cả tên danh mục
+        query = db.query(Task).options(
+            joinedload(Task.subtasks),
+            joinedload(Task.category_info) 
+        ).filter(Task.user_id == user_id)
 
         if search:
             query = query.filter(Task.title.ilike(f"%{search}%"))
@@ -125,9 +160,15 @@ def update_task(db: Session, task_id: int, task_data: TaskCreate):
         task = db.query(Task).filter(Task.id == task_id).first()
         if not task: raise HTTPException(status_code=404, detail="Không tìm thấy")
         
+        # ĐÃ SỬA: Xử lý category_id khi update
+        cat_id = task_data.category_id
+        if not cat_id and task_data.category:
+            cat_id = _resolve_category_id(db, task.user_id, task_data.category)
+        elif not cat_id:
+            cat_id = task.category_id # Giữ nguyên ID cũ nếu không gửi gì
         task.title = task_data.title
         task.description = task_data.description
-        task.category = task_data.category
+        task.category_id = cat_id # Gán ID thay vì String
         task.priority = task_data.priority
         task.start_time = task_data.start_time
         task.deadline = task_data.deadline

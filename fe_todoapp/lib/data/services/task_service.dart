@@ -12,6 +12,7 @@ class TaskService {
         String search = "",
         String filterBy = "all",
         String sortBy = "default",
+        int? categoryId,
       }) async {
     try {
       final encodedSearch = Uri.encodeComponent(search);

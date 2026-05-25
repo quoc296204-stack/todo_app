@@ -5,7 +5,7 @@
       "keywords": ["đồ án", "luận văn", "tốt nghiệp", "khóa luận", "tiểu luận", "bài tập lớn"],
       "title": "Làm đồ án / Luận văn",
       "description": "Nhiệm vụ học thuật quy mô lớn, cần tập trung cao độ.",
-      "category": "Học tập",
+      "category_name": "Học tập",
       "is_large_task": true,
       "subtasks": [
         "Phân tích yêu cầu đề tài & Thu thập tài liệu tham khảo",
@@ -18,7 +18,7 @@
       "keywords": ["ôn thi", "thi cuối kỳ", "kiểm tra", "học bài", "giải đề", "học tiếng anh", "từ vựng"],
       "title": "Học tập / Ôn thi",
       "description": "Nâng cao kiến thức và chuẩn bị cho các bài kiểm tra.",
-      "category": "Học tập",
+      "category_name": "Học tập",
       "is_large_task": false,
       "subtasks": []
     },
@@ -26,7 +26,7 @@
       "keywords": ["báo cáo", "thuyết trình", "slide", "powerpoint", "pitching", "tổng kết"],
       "title": "Chuẩn bị Báo cáo / Thuyết trình",
       "description": "Biên soạn tài liệu và thiết kế slide thuyết trình.",
-      "category": "Công việc",
+      "category_name": "Công việc",
       "is_large_task": true,
       "subtasks": [
         "Thu thập số liệu và chốt dàn ý nội dung",
@@ -39,7 +39,7 @@
       "keywords": ["code", "fix bug", "lập trình", "deploy", "api", "database", "sửa lỗi", "commit"],
       "title": "Lập trình / Phát triển phần mềm",
       "description": "Thực thi các tác vụ liên quan đến kỹ thuật và mã nguồn.",
-      "category": "Công việc",
+      "category_name": "Công việc",
       "is_large_task": true,
       "subtasks": [
         "Đọc hiểu log lỗi hoặc tài liệu API",
@@ -52,7 +52,7 @@
       "keywords": ["họp", "meeting", "gặp mặt", "phỏng vấn", "thảo luận", "bàn bạc", "gọi khách hàng", "check mail"],
       "title": "Giao tiếp Công việc",
       "description": "Tương tác và trao đổi thông tin với đối tác, đồng nghiệp.",
-      "category": "Công việc",
+      "category_name": "Công việc",
       "is_large_task": false,
       "subtasks": []
     },
@@ -60,7 +60,7 @@
       "keywords": ["tập gym", "chạy bộ", "thể dục", "yoga", "workout", "đá bóng", "cầu lông", "bơi", "tennis"],
       "title": "Tập luyện thể thao",
       "description": "Hoạt động rèn luyện thể chất.",
-      "category": "Sức khỏe",
+      "category_name": "Sức khỏe",
       "is_large_task": false,
       "subtasks": []
     },
@@ -68,7 +68,7 @@
       "keywords": ["khám bệnh", "nha khoa", "uống thuốc", "bệnh viện", "bác sĩ", "nhổ răng", "lấy máu"],
       "title": "Chăm sóc Y tế",
       "description": "Kiểm tra và duy trì tình trạng sức khỏe.",
-      "category": "Sức khỏe",
+      "category_name": "Sức khỏe",
       "is_large_task": true,
       "subtasks": [
         "Chuẩn bị sổ khám bệnh và giấy tờ tùy thân (CCCD/BHYT)",
@@ -81,7 +81,7 @@
       "keywords": ["dọn nhà", "quét nhà", "lau nhà", "giặt giũ", "vệ sinh", "rửa bát", "đổ rác", "hút bụi"],
       "title": "Dọn dẹp nhà cửa",
       "description": "Giữ gìn không gian sống sạch sẽ, ngăn nắp.",
-      "category": "Gia đình",
+      "category_name": "Gia đình",
       "is_large_task": true,
       "subtasks": [
         "Phân loại và gom đồ mang đi giặt",
@@ -94,7 +94,7 @@
       "keywords": ["nấu ăn", "nấu cơm", "chuẩn bị bữa tối", "làm bánh"],
       "title": "Nấu nướng / Bếp núc",
       "description": "Chuẩn bị bữa ăn cho bản thân và gia đình.",
-      "category": "Gia đình",
+      "category_name": "Gia đình",
       "is_large_task": false,
       "subtasks": []
     },
@@ -102,7 +102,7 @@
       "keywords": ["đón con", "cho chó ăn", "dắt chó", "tắm cho mèo", "chăm con"],
       "title": "Chăm sóc gia đình / Thú cưng",
       "description": "Dành thời gian chăm lo cho người thân và vật nuôi.",
-      "category": "Gia đình",
+      "category_name": "Gia đình",
       "is_large_task": false,
       "subtasks": []
     },
@@ -110,7 +110,7 @@
       "keywords": ["đi siêu thị", "mua sắm", "shopping", "mua đồ ăn", "đi chợ"],
       "title": "Đi siêu thị / Mua sắm",
       "description": "Mua nhu yếu phẩm cần thiết.",
-      "category": "Cá nhân",
+      "category_name": "Cá nhân",
       "is_large_task": true,
       "subtasks": [
         "Kiểm tra tủ lạnh và ghi danh sách đồ cần mua",
@@ -123,7 +123,7 @@
       "keywords": ["xe máy", "bảo dưỡng", "thay nhớt", "rửa xe", "đổ xăng", "sửa xe", "bơm lốp"],
       "title": "Bảo dưỡng phương tiện",
       "description": "Chăm sóc và bảo trì phương tiện di chuyển cá nhân.",
-      "category": "Cá nhân",
+      "category_name": "Cá nhân",
       "is_large_task": false,
       "subtasks": []
     },
@@ -131,7 +131,7 @@
       "keywords": ["du lịch", "đặt vé", "khách sạn", "pack đồ", "chuẩn bị hành lý", "sân bay", "chuyến bay"],
       "title": "Chuẩn bị chuyến đi",
       "description": "Lên kế hoạch di chuyển và lưu trú.",
-      "category": "Cá nhân",
+      "category_name": "Cá nhân",
       "is_large_task": true,
       "subtasks": [
         "Chốt ngày giờ, đặt vé máy bay/xe và khách sạn",
@@ -144,7 +144,7 @@
       "keywords": ["trả tiền", "thanh toán", "hóa đơn", "đóng tiền", "chuyển khoản", "tiền điện", "tiền nước", "tiền mạng"],
       "title": "Thanh toán Hóa đơn",
       "description": "Xử lý các khoản chi phí và giao dịch cá nhân.",
-      "category": "Tài chính",
+      "category_name": "Tài chính",
       "is_large_task": false,
       "subtasks": []
     },
@@ -152,7 +152,7 @@
       "keywords": ["đi chơi", "cà phê", "nhậu", "hẹn hò", "sinh nhật", "đám cưới", "party", "tiệc", "liên hoan"],
       "title": "Tham gia Sự kiện Xã hội",
       "description": "Hoạt động giao lưu, giải trí và duy trì các mối quan hệ.",
-      "category": "Xã hội",
+      "category_name": "Xã hội",
       "is_large_task": false,
       "subtasks": []
     },
@@ -160,7 +160,7 @@
       "keywords": ["đọc sách", "xem phim", "nghe nhạc", "chơi game", "học ngoại ngữ", "học kỹ năng mới"],
       "title": "Giải trí / Phát triển bản thân",
       "description": "Dành thời gian cho sở thích và nâng cao kiến thức.",
-      "category": "Cá nhân",
+      "category_name": "Cá nhân",
       "is_large_task": false,
       "subtasks": []
     }

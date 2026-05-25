@@ -262,7 +262,7 @@ class _DashboardPageState extends State<DashboardPage> with WidgetsBindingObserv
             ],
           ),
         ),
-        IconButton(icon: const Icon(Icons.notifications_none, size: 28), onPressed: () {}),
+        // IconButton(icon: const Icon(Icons.notifications_none, size: 28), onPressed: () {}),
       ],
     );
   }

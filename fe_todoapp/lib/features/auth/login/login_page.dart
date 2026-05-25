@@ -32,6 +32,7 @@ class _LoginPageState extends State<LoginPage> {
   final AuthService _authService = AuthService();
 
   bool _isLoading = false; // Trạng thái chờ khi gọi API
+  bool _isPasswordVisible = false; // MỚI THÊM: Trạng thái ẩn/hiện mật khẩu
 
   /// Xử lý logic đăng nhập
   /// Xử lý logic đăng nhập
@@ -246,7 +247,22 @@ class _LoginPageState extends State<LoginPage> {
         _buildTextField(
           controller: _passwordController,
           hintText: '••••••••',
-          obscureText: true,
+          obscureText: !_isPasswordVisible, // THAY ĐỔI: Phụ thuộc vào biến trạng thái
+          suffixIcon: Padding(
+            padding: const EdgeInsets.only(right: 8.0), // Cách viền phải một chút cho đẹp
+            child: IconButton(
+              icon: Icon(
+                _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                color: kOutline,
+              ),
+              onPressed: () {
+                // Cập nhật giao diện khi bấm nút
+                setState(() {
+                  _isPasswordVisible = !_isPasswordVisible;
+                });
+              },
+            ),
+          ),
         ),
         const SizedBox(height: 24),
 
@@ -362,6 +378,7 @@ class _LoginPageState extends State<LoginPage> {
     required String hintText,
     bool obscureText = false,
     TextInputType keyboardType = TextInputType.text,
+    Widget? suffixIcon,
   }) {
     return TextField(
       controller: controller,
@@ -378,6 +395,7 @@ class _LoginPageState extends State<LoginPage> {
           borderRadius: BorderRadius.circular(24),
           borderSide: const BorderSide(color: kPrimary, width: 1.2),
         ),
+        suffixIcon: suffixIcon,
       ),
     );
   }

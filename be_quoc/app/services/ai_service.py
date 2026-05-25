@@ -39,7 +39,7 @@ class AIService:
         max_score = 0
         for example in training_examples:
             score = 0
-            for kw in example["keywords"]:
+            for kw in example.get("keywords", []):
                 # Bảo toàn ranh giới cụm từ tiếng Việt
                 if re.search(rf'\b{re.escape(kw.lower())}\b', text_lower):
                     score += 1
@@ -49,10 +49,11 @@ class AIService:
 
         # 2. XỬ LÝ TEXT & SINH TIÊU ĐỀ
         if best_match and max_score > 0:
-            matched_title = best_match["title"]
-            matched_desc = best_match["description"]
-            matched_cat = best_match["category"]
-            is_large_task = best_match["is_large_task"]
+            matched_title = best_match.get("title", "Nhiệm vụ mới")
+            matched_desc = best_match.get("description", "")
+            # ĐÃ SỬA: Dùng get() với tên cột mới để tránh KeyError
+            matched_cat = best_match.get("category_name", "Khác") 
+            is_large_task = best_match.get("is_large_task", False)
         else:
             # Thuật toán lọc rác cho các câu lệnh tự do
             clean_text = text
@@ -103,7 +104,7 @@ class AIService:
         return {
             "title": matched_title,
             "description": matched_desc,
-            "category": matched_cat,
+            "category_name": matched_cat, # ĐÃ SỬA: Đổi từ "category" thành "category_name"
             "priority": priority,
             "start_time": datetime.now().strftime("%Y-%m-%d %H:%M"),
             "deadline": due_datetime.strftime("%Y-%m-%d %H:%M"),
@@ -115,7 +116,7 @@ class AIService:
         return {
             "title": default_title,
             "description": f"Nhiệm vụ lập lịch tự động: {default_title}.",
-            "category": "Cá nhân",
+            "category_name": "Cá nhân", # ĐÃ SỬA: Đổi từ "category" thành "category_name"
             "priority": "Trung bình",
             "start_time": datetime.now().strftime("%Y-%m-%d %H:%M"),
             "deadline": (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d %H:%M"),

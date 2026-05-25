@@ -26,8 +26,8 @@ class SubtaskParsed(BaseModel):
 # 3. Schema Đầu ra (Trả kết quả về cho Flutter)
 class AIParsedTaskResponse(BaseModel):
     title: str
-    description: str
-    category: str
+    description: Optional[str] = ""
+    category_name: str
     priority: str
     start_time: datetime  # Pydantic sẽ tự động ép chuỗi "YYYY-MM-DD HH:MM:SS" thành datetime chuẩn
     deadline: datetime

@@ -1,7 +1,7 @@
 from datetime import date, datetime
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy import cast, Date # SỬA LỖI Ở ĐÂY: Import Date từ sqlalchemy
+from sqlalchemy import cast, Date
 from sqlalchemy.orm import Session
 import traceback
 
@@ -11,11 +11,9 @@ from app.services.ai_service import AIService
 from app.models.task_models import Task
 from app.models.habit_models import Habit, HabitLog
 
-
-# Router gốc đã có prefix="/ai"
 router = APIRouter(prefix="/ai", tags=["Internal AI Engine"])
 
-# 1. API PHÂN TÍCH VĂN BẢN (Đã gộp 2 hàm trùng lặp làm 1)
+# 1. API PHÂN TÍCH VĂN BẢN
 @router.post("/nlp-task", response_model=AIParsedTaskResponse)
 async def process_nlp_task(request: NLPTaskRequest, db: Session = Depends(get_db)):
     try:
@@ -31,7 +29,7 @@ async def process_nlp_task(request: NLPTaskRequest, db: Session = Depends(get_db
             detail=f"Sự cố xử lý logic AI cục bộ: {str(e)}"
         )
 
-# 2. API GỢI Ý TỪ CURATOR (Đường dẫn thực tế: /api/ai/suggestions/{user_id})
+# 2. API GỢI Ý TỪ CURATOR 
 @router.get("/suggestions/{user_id}")
 def get_curator_suggestion(user_id: int, db: Session = Depends(get_db)):
     today = date.today()

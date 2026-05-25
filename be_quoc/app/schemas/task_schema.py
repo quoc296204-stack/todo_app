@@ -9,7 +9,8 @@ class SubTaskCreate(BaseModel):
 class TaskCreate(BaseModel):
     title: str
     description: Optional[str] = None
-    category: str
+    category_id: Optional[int] = None
+    category: Optional[str] = None
     priority: str
     start_time: datetime
     deadline: datetime

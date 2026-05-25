@@ -59,8 +59,8 @@ class SupportPage extends StatelessWidget {
 
             const SizedBox(height: 40),
 
-            // 4. AI INSIGHT BOX
-            _buildTeamQuote(),
+            // // 4. AI INSIGHT BOX
+            // _buildTeamQuote(),
 
             const SizedBox(height: 48),
 
@@ -72,7 +72,7 @@ class SupportPage extends StatelessWidget {
             // 6. CONTACT SECTION
             Row(
               children: [
-                Expanded(child: _buildContactCard(Icons.mail, "Email", "hello@curator.ai", const Color(0xFFCBCEFF))),
+                Expanded(child: _buildContactCard(Icons.mail, "Email", "hello", const Color(0xFFCBCEFF))),
                 const SizedBox(width: 12),
                 Expanded(child: _buildContactCard(Icons.call, "Hotline", "1900 8888", const Color(0xFFFFF0E3))),
               ],
@@ -82,7 +82,7 @@ class SupportPage extends StatelessWidget {
             const Center(
               child: Column(
                 children: [
-                  Text("Phiên bản 2.4.0 • Digital Curator", style: TextStyle(color: Colors.grey, fontSize: 12, fontWeight: FontWeight.w500)),
+                  Text("Phiên bản 1.0", style: TextStyle(color: Colors.grey, fontSize: 12, fontWeight: FontWeight.w500)),
                   SizedBox(height: 120),
                 ],
               ),
@@ -130,29 +130,29 @@ class SupportPage extends StatelessWidget {
     );
   }
 
-  Widget _buildTeamQuote() {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.6),
-        borderRadius: BorderRadius.circular(16),
-        border: Border(left: BorderSide(color: primaryColor, width: 4)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(Icons.auto_awesome, color: primaryColor, size: 24),
-          const SizedBox(height: 12),
-          const Text(
-            "\"Chúng tôi luôn lắng nghe ý kiến từ bạn để Digital Curator ngày càng hoàn thiện hơn.\"",
-            style: TextStyle(fontStyle: FontStyle.italic, color: Colors.black87, fontSize: 14, height: 1.5),
-          ),
-          const SizedBox(height: 8),
-          Text("ĐỘI NGŨ SÁNG TẠO", style: TextStyle(color: primaryColor, fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1.5)),
-        ],
-      ),
-    );
-  }
+  // Widget _buildTeamQuote() {
+  //   // return Container(
+  //   //   // padding: const EdgeInsets.all(24),
+  //   //   // decoration: BoxDecoration(
+  //   //   //   color: Colors.white.withOpacity(0.6),
+  //   //   //   borderRadius: BorderRadius.circular(16),
+  //   //   //   border: Border(left: BorderSide(color: primaryColor, width: 4)),
+  //   //   ),
+  //     child: Column(
+  //       crossAxisAlignment: CrossAxisAlignment.start,
+  //       // children: [
+  //       //   Icon(Icons.auto_awesome, color: primaryColor, size: 24),
+  //       //   const SizedBox(height: 12),
+  //       //   const Text(
+  //       //     "\"Chúng tôi luôn lắng nghe ý kiến từ bạn để Digital Curator ngày càng hoàn thiện hơn.\"",
+  //       //     style: TextStyle(fontStyle: FontStyle.italic, color: Colors.black87, fontSize: 14, height: 1.5),
+  //       //   ),
+  //       //   const SizedBox(height: 8),
+  //       //   Text("ĐỘI NGŨ SÁNG TẠO", style: TextStyle(color: primaryColor, fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1.5)),
+  //       // ],
+  //   //   ),
+  //   // );
+  // }
 
   Widget _buildFeedbackForm() {
     return Container(

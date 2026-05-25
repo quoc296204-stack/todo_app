@@ -19,7 +19,7 @@ def get_user_habits(db: Session, user_id: int, target_date: date):
         result.append({
             "id": h.id,
             "title": h.title,
-            "subtitle": h.subtitle,
+            "description": h.description, # ĐÃ SỬA: Lấy h.description thay vì h.subtitle
             "is_completed": h.id in completed_ids
         })
     return result
@@ -56,9 +56,15 @@ def toggle_habit_status(db: Session, habit_id: int, target_date: date):
 
 # 3. TẠO MỚI
 def create_new_habit(db: Session, habit_data: HabitCreate):
-    new_habit = Habit(user_id=habit_data.user_id, title=habit_data.title, subtitle=habit_data.subtitle)
+    # ĐÃ SỬA: Gán habit_data.description vào model
+    new_habit = Habit(
+        user_id=habit_data.user_id, 
+        title=habit_data.title, 
+        description=habit_data.description 
+    )
     db.add(new_habit)
     db.commit()
+    db.refresh(new_habit) # Nạp lại dữ liệu để lấy ID vừa tạo
     return new_habit
 
 # 4. CẬP NHẬT
@@ -66,14 +72,17 @@ def update_habit(db: Session, habit_id: int, habit_data: HabitUpdate):
     habit = db.query(Habit).filter(Habit.id == habit_id).first()
     if habit:
         habit.title = habit_data.title
-        habit.subtitle = habit_data.subtitle
+        habit.description = habit_data.description # ĐÃ SỬA
         db.commit()
+        db.refresh(habit)
     return habit
 
-# 5. XÓA (Xóa an toàn không bị lỗi khóa ngoại)
+# 5. XÓA 
 def delete_habit(db: Session, habit_id: int):
     habit = db.query(Habit).filter(Habit.id == habit_id).first()
     if habit:
+        # Do trong DB đã cài ON DELETE CASCADE, nên xóa Habit sẽ tự động xóa HabitLog.
+        # Nhưng để an toàn tuyệt đối trên cấp độ code, ta vẫn xóa Log trước:
         db.query(HabitLog).filter(HabitLog.habit_id == habit_id).delete()
         db.delete(habit)
         db.commit()
