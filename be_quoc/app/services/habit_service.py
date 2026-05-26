@@ -19,7 +19,7 @@ def get_user_habits(db: Session, user_id: int, target_date: date):
         result.append({
             "id": h.id,
             "title": h.title,
-            "description": h.description, # ĐÃ SỬA: Lấy h.description thay vì h.subtitle
+            "description": h.description,
             "is_completed": h.id in completed_ids
         })
     return result
@@ -29,19 +29,16 @@ def toggle_habit_status(db: Session, habit_id: int, target_date: date):
     habit = db.query(Habit).filter(Habit.id == habit_id).first()
     if not habit:
         return None
-
     log = db.query(HabitLog).filter(
         HabitLog.habit_id == habit_id, 
         cast(HabitLog.completed_at, Date) == target_date
     ).first()
-    
     is_done = False
     if log:
         db.delete(log)
     else:
         db.add(HabitLog(habit_id=habit_id, user_id=habit.user_id, completed_at=target_date))
         is_done = True
-        
     db.commit()
     
     # Tính lại phần trăm
@@ -51,12 +48,10 @@ def toggle_habit_status(db: Session, habit_id: int, target_date: date):
         cast(HabitLog.completed_at, Date) == target_date
     ).count()
     percent = int((done / total) * 100) if total > 0 else 0
-    
     return {"is_completed": is_done, "new_progress": percent}
 
 # 3. TẠO MỚI
 def create_new_habit(db: Session, habit_data: HabitCreate):
-    # ĐÃ SỬA: Gán habit_data.description vào model
     new_habit = Habit(
         user_id=habit_data.user_id, 
         title=habit_data.title, 
@@ -72,7 +67,7 @@ def update_habit(db: Session, habit_id: int, habit_data: HabitUpdate):
     habit = db.query(Habit).filter(Habit.id == habit_id).first()
     if habit:
         habit.title = habit_data.title
-        habit.description = habit_data.description # ĐÃ SỬA
+        habit.description = habit_data.description 
         db.commit()
         db.refresh(habit)
     return habit

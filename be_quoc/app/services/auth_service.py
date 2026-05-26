@@ -9,9 +9,6 @@ def register_user_logic(db: Session, user_in: UserCreate):
     existing_user = db.query(User).filter(User.email == user_in.email).first()
     if existing_user:
         raise HTTPException(status_code=400, detail="Email đã tồn tại trong hệ thống")
-
-    # 2. Tạo user KHÔNG CẦN HASH PASS (hoặc lưu pass rỗng)
-    # Vì mật khẩu thật đã được Google giữ an toàn trên Firebase
     new_user = User(
         email=user_in.email,
         full_name=user_in.full_name,
@@ -56,10 +53,8 @@ def change_password_logic(db: Session, user_id: int, data: PasswordChange):
     # 2. Kiểm tra mật khẩu cũ (Sử dụng Verify từ core)
     if not verify_password(data.old_password, user.password):
         raise HTTPException(status_code=400, detail="Mật khẩu cũ không chính xác")
-
     # 3. Mã hóa và cập nhật mật khẩu mới
     user.password = get_password_hash(data.new_password)
-    
     db.commit() # SQLAlchemy tự hiểu đây là lệnh UPDATE MySQL
     return {"status": 200, "message": "Thay đổi mật khẩu thành công"}
 
@@ -81,23 +76,17 @@ def update_profile_logic(db: Session, user_id: int, user_update: UserUpdate):
     # Gán dữ liệu từ biến của Pydantic (user_update) sang cột của Database (user)
     
     if user_update.name is not None:
-        user.full_name = user_update.name      # Đồng bộ name -> full_name
-        
+        user.full_name = user_update.name      
     if user_update.phone is not None:
-        user.phone_number = user_update.phone  # Đồng bộ phone -> phone_number
-        
+        user.phone_number = user_update.phone  
     if user_update.birthday is not None:
-        user.birthday = user_update.birthday   # Giống nhau
-        
+        user.birthday = user_update.birthday   
     if user_update.gender is not None:
-        user.gender = user_update.gender       # Giống nhau
-        
+        user.gender = user_update.gender      
     if user_update.job is not None:
-        user.job_title = user_update.job       # Đồng bộ job -> job_title
-        
+        user.job_title = user_update.job       
     if user_update.bio is not None:
-        user.bio = user_update.bio             # Giống nhau
-
+        user.bio = user_update.bio             
     # 3. Lưu vào Database
     try:
         db.commit()
@@ -106,6 +95,4 @@ def update_profile_logic(db: Session, user_id: int, user_update: UserUpdate):
         db.rollback()
         print(f"Lỗi DB: {e}") # In ra terminal để dễ debug nếu có lỗi
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Lỗi khi lưu vào Database")
-
-    # 4. Trả về kết quả
     return {"message": "Cập nhật hồ sơ thành công!"}

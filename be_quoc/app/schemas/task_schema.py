@@ -15,9 +15,7 @@ class TaskCreate(BaseModel):
     start_time: datetime
     deadline: datetime
     is_reminder: bool = False
-    
-    # Khai báo subtasks ở đây, mặc định là mảng rỗng
-    subtasks: List[SubTaskCreate] = []
+    subtasks: List[SubTaskCreate] = []     # Khai báo subtasks ở đây, mặc định là mảng rỗng
 
 class CategoryCreate(BaseModel):
     name: str

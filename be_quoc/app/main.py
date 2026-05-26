@@ -1,11 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.models import user_models, habit_models, task_models 
 from app.api.routes import auth_routes, habits_routes, tasks_routes, ai_routes
 from app.db.database import engine, Base
 import uvicorn
-
-# 🔴 ĐÃ XÓA dòng import lỗi 'from be_quoc import app' ở đây để hết lỗi ModuleNotFoundError
 
 myapp = FastAPI(title="Digital Curator API")
 
@@ -24,14 +21,13 @@ myapp.add_middleware(
 myapp.include_router(auth_routes.router)
 myapp.include_router(tasks_routes.router)
 myapp.include_router(habits_routes.router)
-
 myapp.include_router(ai_routes.router, prefix="/api", tags=["Internal AI Engine"])
 
 @myapp.get("/")
 def root():
     return {"message": "API đang chạy mượt mà!"}
 
-# Ép FastAPI in ra toàn bộ URL hợp lệ khi khởi động để bạn kiểm soát
+# Ép FastAPI in ra toàn bộ URL hợp lệ khi khởi động để kiểm soát path api 
 # @myapp.on_event("startup")
 # def print_all_routes():
 #     print("\n=== SƠ ĐỒ ĐƯỜNG DẪN API HIỆN CÓ CỦA HỆ THỐNG ===")

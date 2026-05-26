@@ -5,7 +5,7 @@ from fastapi import HTTPException
 from app.models.task_models import SubTask, Task, Category
 from app.schemas.task_schema import TaskCreate, CategoryCreate 
 
-# ==================== HÀM HỖ TRỢ XỬ LÝ DANH MỤC ====================
+# Hàm hỗ trợ xử lý danh mục
 def _resolve_category_id(db: Session, user_id: int, category_name: str):
     """
     Biến đổi tên danh mục (chuỗi) thành category_id (số).
@@ -13,16 +13,13 @@ def _resolve_category_id(db: Session, user_id: int, category_name: str):
     """
     if not category_name:
         return None
-        
     category_name = category_name.strip()
     category_obj = db.query(Category).filter(
         Category.name == category_name, 
         Category.user_id == user_id
     ).first()
-    
     if category_obj:
         return category_obj.id
-        
     # Tự động tạo mới nếu chưa có
     new_category = Category(user_id=user_id, name=category_name)
     db.add(new_category)
@@ -30,7 +27,7 @@ def _resolve_category_id(db: Session, user_id: int, category_name: str):
     return new_category.id
 
 
-# ==================== CỤM LOGIC CHO CÔNG VIỆC (TASKS) ====================
+# Hàm hỗ trợ công việc
 
 def create_task(db: Session, user_id: int, task_data: TaskCreate):
     try:
@@ -38,7 +35,6 @@ def create_task(db: Session, user_id: int, task_data: TaskCreate):
         cat_id = task_data.category_id
         if not cat_id and task_data.category:
             cat_id = _resolve_category_id(db, user_id, task_data.category)
-
         new_task = Task(
             user_id=user_id,
             title=task_data.title,
@@ -63,7 +59,6 @@ def create_task_with_subtasks(db: Session, user_id: int, task_data: TaskCreate):
         cat_id = task_data.category_id
         if not cat_id and task_data.category:
             cat_id = _resolve_category_id(db, user_id, task_data.category)
-
         new_task = Task(
             user_id=user_id,
             title=task_data.title,
@@ -75,10 +70,8 @@ def create_task_with_subtasks(db: Session, user_id: int, task_data: TaskCreate):
             is_reminder=task_data.is_reminder,
             is_completed=False
         )
-        
         db.add(new_task)
         db.flush() # Lấy new_task.id để làm khóa ngoại cho subtasks
-        
         # Tạo subtasks nếu có
         if hasattr(task_data, 'subtasks') and task_data.subtasks:
             subtask_objects = []
@@ -89,9 +82,7 @@ def create_task_with_subtasks(db: Session, user_id: int, task_data: TaskCreate):
                     is_completed=st.is_checked if hasattr(st, 'is_checked') else False
                 )
                 subtask_objects.append(new_subtask)
-                
             db.add_all(subtask_objects)
-            
         db.commit()
         db.refresh(new_task) 
         return new_task
@@ -101,17 +92,13 @@ def create_task_with_subtasks(db: Session, user_id: int, task_data: TaskCreate):
 
 def get_all_tasks(db: Session, user_id: int, search: str = None, filter_by: str = "all", sort_by: str = "default"):
     try:
-        # ĐÃ SỬA: Thêm joinedload(Task.category_info) để lúc query lấy được cả tên danh mục
         query = db.query(Task).options(
             joinedload(Task.subtasks),
             joinedload(Task.category_info) 
         ).filter(Task.user_id == user_id)
-
         if search:
             query = query.filter(Task.title.ilike(f"%{search}%"))
-
         fb = str(filter_by).strip()
-
         # --- LỌC ---
         if fb in ["today", "Hôm nay"]:
             query = query.filter(func.date(Task.deadline) == func.current_date())
@@ -120,7 +107,6 @@ def get_all_tasks(db: Session, user_id: int, search: str = None, filter_by: str 
             query = query.filter(func.date(Task.deadline) < func.current_date(), func.date(Task.deadline) >= three_days_ago, Task.is_completed == False)
         elif fb in ["completed", "Đã hoàn thành"]:
             query = query.filter(Task.is_completed == True)
-
         # --- SẮP XẾP ---
         priority_weight = case(
             (Task.priority == 'CAO', 3),
@@ -128,7 +114,6 @@ def get_all_tasks(db: Session, user_id: int, search: str = None, filter_by: str 
             (Task.priority == 'THẤP', 1),
             else_=0
         )
-
         sb = str(sort_by).strip()
         if sb in ["Ưu tiên: Cao -> Thấp", "high_to_low"]:
             query = query.order_by(priority_weight.desc(), Task.created_at.desc())
@@ -145,22 +130,20 @@ def toggle_task_status(db: Session, task_id: int):
     try:
         task = db.query(Task).filter(Task.id == task_id).first()
         if not task: raise HTTPException(status_code=404, detail="Không tìm thấy công việc")
-        
         task.is_completed = not task.is_completed
         task.completed_at = func.now() if task.is_completed else None
-        
         db.commit()
         return {"status": 200, "message": "Thành công", "is_completed": task.is_completed}
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=str(e))
+    
 
 def update_task(db: Session, task_id: int, task_data: TaskCreate):
     try:
         task = db.query(Task).filter(Task.id == task_id).first()
         if not task: raise HTTPException(status_code=404, detail="Không tìm thấy")
-        
-        # ĐÃ SỬA: Xử lý category_id khi update
+    
         cat_id = task_data.category_id
         if not cat_id and task_data.category:
             cat_id = _resolve_category_id(db, task.user_id, task_data.category)
@@ -168,7 +151,7 @@ def update_task(db: Session, task_id: int, task_data: TaskCreate):
             cat_id = task.category_id # Giữ nguyên ID cũ nếu không gửi gì
         task.title = task_data.title
         task.description = task_data.description
-        task.category_id = cat_id # Gán ID thay vì String
+        task.category_id = cat_id 
         task.priority = task_data.priority
         task.start_time = task_data.start_time
         task.deadline = task_data.deadline
@@ -191,7 +174,7 @@ def delete_task(db: Session, task_id: int):
         db.rollback()
         raise HTTPException(status_code=500, detail=str(e))
 
-# ==================== CỤM LOGIC DANH MỤC ====================
+# cụm logoic danh mục
 
 def get_categories(db: Session, user_id: int):
     return db.query(Category).filter(Category.user_id == user_id).all()

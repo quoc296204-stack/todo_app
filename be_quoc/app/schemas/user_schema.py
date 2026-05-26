@@ -7,10 +7,8 @@ class UserCreate(BaseModel):
     email: EmailStr
     password: str
     confirm_password: str
-    # phone_number: Optional[str] = None
 
 class UserLogin(BaseModel):
-    # Khớp với _emailController và _passwordController của bạn
     email: EmailStr
     password: str
 
